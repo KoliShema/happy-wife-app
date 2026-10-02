@@ -6,366 +6,186 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Happy Wife">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231F1B56'/%3E%3Ctext y='.9em' font-size='80' text-anchor='middle' x='50'%3E%F0%9F%92%95%3C/text%3E%3C/svg%3E">
-<meta name="description" content="Daily habits to keep your wife happy — 2 things every day, streak tracker, love notes, and special date reminders.">
-<meta property="og:title" content="Happy Wife App 💕">
-<meta property="og:description" content="Daily habits to keep your wife happy.">
+<meta name="description" content="Daily habits to keep your wife happy.">
 <meta name="theme-color" content="#1F1B56">
 <link rel="manifest" href="manifest.json">
 <title>Happy Wife</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
-  --rose: #EB4137;
-  --rose-light: #F3A79E;
-  --rose-pale: #FFF0EF;
-  --rose-mid: #F3A79E;
-  --cream: #FAF9F6;
-  --dark: #1F1B56;
-  --muted: #7472A0;
-  --card: #FFFFFF;
-  --border: rgba(31,27,86,0.12);
-  --navy: #1F1B56;
-  --coral: #EB4137;
-  --coral-tint: #F3A79E;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --navy: #1F1B56; --coral: #EB4137; --coral-tint: #F3A79E;
+  --cream: #FAF9F6; --muted: #7472A0; --border: rgba(31,27,86,0.12);
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; background: var(--cream); font-family: 'Poppins', sans-serif; color: var(--dark); }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppins',sans-serif;color:var(--navy)}
+
+/* Auth screen */
+#auth-screen{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;z-index:999;
+}
+#auth-screen .logo{font-size:48px;margin-bottom:8px}
+#auth-screen h1{color:white;font-size:24px;font-weight:900;margin-bottom:4px}
+#auth-screen p{color:var(--coral-tint);font-size:13px;margin-bottom:32px;text-align:center}
+.auth-card{background:white;border-radius:20px;padding:24px;width:100%;max-width:340px}
+.auth-tab{display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.auth-tab button{flex:1;padding:10px;border:none;background:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.auth-tab button.active{background:var(--navy);color:white}
+.auth-field{margin-bottom:12px}
+.auth-field label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase}
+.auth-field input{width:100%;border:1.5px solid var(--coral-tint);border-radius:10px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);outline:none}
+.auth-field input:focus{border-color:var(--navy)}
+.auth-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.auth-btn:active{opacity:0.85}
+.auth-err{font-size:12px;color:var(--coral);text-align:center;margin-top:8px;min-height:18px}
+.auth-forgot{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline}
 
 /* App shell */
-#app { display: flex; flex-direction: column; height: 100%; }
-#screen-area {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-top: calc(var(--safe-top) + 12px);
-  padding-bottom: calc(var(--safe-bottom) + 70px);
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Bottom nav */
-#nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: white;
-  border-top: 1px solid var(--border);
-  display: flex;
-  padding-bottom: var(--safe-bottom);
-  z-index: 100;
-}
-.nav-btn {
-  flex: 1; border: none; background: none;
-  padding: 10px 0 6px;
-  cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  font-family: 'Poppins', sans-serif;
-}
-.nav-btn svg { width: 22px; height: 22px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
-.nav-btn span { font-size: 10px; color: var(--muted); letter-spacing: 0.02em; transition: color 0.2s; }
-.nav-btn.active svg { stroke: var(--coral); }
-.nav-btn.active span { color: var(--coral); font-weight: 700; }
-
-/* Screens */
-.screen { display: none; padding: 0 16px; }
-.screen.active { display: block; }
-
-/* Page header */
-.page-header { margin-bottom: 20px; }
-.page-header .eyebrow { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-.page-header h1 { font-size: 26px; font-weight: 900; color: var(--dark); line-height: 1.1; }
-.page-header .sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
-
-/* Cards */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px 18px;
-  margin-bottom: 12px;
-}
-.card-sm { padding: 12px 16px; margin-bottom: 10px; }
-
-/* Home screen */
-.hero-card {
-  background: linear-gradient(135deg, var(--navy) 0%, #312C8A 100%);
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 20px;
-  color: white;
-}
-.hero-card .date-label { font-size: 12px; opacity: 0.75; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
-.hero-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-.hero-card .sub { font-size: 13px; opacity: 0.8; }
-.streak-pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 12px;
-  margin-top: 12px;
-}
-
-.habit-item { display: flex; align-items: flex-start; gap: 14px; }
-.habit-check {
-  width: 26px; height: 26px; border-radius: 50%;
-  border: 2px solid var(--rose-mid);
-  background: white;
-  flex-shrink: 0;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-}
-.habit-check.checked { background: var(--rose); border-color: var(--rose); }
-.habit-check.checked svg { display: block; }
-.habit-check svg { display: none; width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.habit-text { flex: 1; }
-.habit-title { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 2px; }
-.habit-desc { font-size: 13px; color: var(--muted); line-height: 1.45; }
-.habit-time { font-size: 11px; color: var(--rose-light); margin-top: 5px; font-weight: 700; letter-spacing: 0.03em; }
-.habit-title.done { text-decoration: line-through; opacity: 0.5; }
-
-.section-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; }
-
-.new-pair-btn {
-  width: 100%; border: 1.5px solid var(--coral);
-  border-radius: 12px; background: white;
-  color: var(--coral); font-family: 'Poppins', sans-serif;
-  font-size: 14px; font-weight: 700;
-  padding: 13px; cursor: pointer;
-  margin-top: 4px;
-  transition: background 0.15s;
-}
-.new-pair-btn:active { background: var(--rose-pale); }
-
-/* Streak screen */
-.big-streak {
-  text-align: center;
-  padding: 32px 20px;
-  background: linear-gradient(135deg, var(--navy) 0%, #312C8A 100%);
-  border-radius: 20px;
-  color: white;
-  margin-bottom: 20px;
-}
-.big-streak .num { font-size: 72px; font-weight: 900; line-height: 1; }
-.big-streak .label { font-size: 14px; opacity: 0.8; margin-top: 6px; }
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-.stat-card {
-  background: white; border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 16px;
-  text-align: center;
-}
-.stat-card .val { font-size: 26px; font-weight: 900; color: var(--rose); }
-.stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-/* Notes screen */
-.note-input-area { margin-bottom: 16px; }
-.input-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.input-row input, .note-input-area textarea {
-  flex: 1; border: 1.5px solid var(--rose-mid);
-  border-radius: 12px; padding: 11px 14px;
-  font-family: 'Poppins', sans-serif; font-size: 14px;
-  color: var(--dark); background: white;
-  outline: none; width: 100%;
-}
-.note-input-area textarea { min-height: 80px; resize: none; display: block; margin-bottom: 8px; }
-.input-row input:focus, .note-input-area textarea:focus { border-color: var(--rose); }
-.add-btn {
-  background: var(--coral); color: white;
-  border: none; border-radius: 12px; padding: 11px 16px;
-  font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
-  cursor: pointer; white-space: nowrap; flex-shrink: 0;
-}
-.add-btn:active { opacity: 0.85; }
-
-.note-card {
-  background: white; border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 16px;
-  margin-bottom: 10px;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 10px;
-}
-.note-body { flex: 1; }
-.note-tag { font-size: 10px; font-weight: 700; color: var(--coral); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
-.note-text { font-size: 14px; color: var(--dark); line-height: 1.5; }
-.note-del { color: var(--muted); font-size: 18px; cursor: pointer; flex-shrink: 0; padding: 2px 4px; }
-.random-btn {
-  width: 100%; background: #EEEDF8;
-  border: 1.5px solid rgba(31,27,86,0.2); border-radius: 12px;
-  color: var(--navy); font-family: 'Poppins', sans-serif;
-  font-size: 14px; font-weight: 700; padding: 13px;
-  cursor: pointer; margin-bottom: 16px;
-}
-.random-result {
-  background: var(--navy); color: white;
-  border-radius: 14px; padding: 16px; text-align: center;
-  font-size: 16px; font-style: italic; line-height: 1.5;
-  margin-bottom: 16px; display: none;
-}
-.tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-.tab-btn {
-  flex: 1; border: 1.5px solid var(--rose-mid);
-  border-radius: 10px; padding: 9px 0;
-  font-family: 'Poppins', sans-serif; font-size: 13px;
-  font-weight: 700; cursor: pointer;
-  background: white; color: var(--muted);
-}
-.tab-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
-
-/* Dates screen */
-.date-form { margin-bottom: 16px; }
-.form-field { margin-bottom: 10px; }
-.form-field label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 5px; }
-.form-field input, .form-field select {
-  width: 100%; border: 1.5px solid var(--rose-mid);
-  border-radius: 12px; padding: 11px 14px;
-  font-family: 'Poppins', sans-serif; font-size: 14px;
-  color: var(--dark); background: white; outline: none;
-}
-.form-field input:focus, .form-field select:focus { border-color: var(--rose); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.submit-btn {
-  width: 100%; background: var(--navy); color: white;
-  border: none; border-radius: 12px; padding: 13px;
-  font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
-  cursor: pointer; margin-top: 4px;
-}
-.submit-btn:active { opacity: 0.85; }
-
-.date-item {
-  background: white; border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 16px;
-  margin-bottom: 10px;
-  display: flex; align-items: center; gap: 14px;
-}
-.date-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: var(--rose-pale); display: flex;
-  align-items: center; justify-content: center;
-  font-size: 22px; flex-shrink: 0;
-}
-.date-info { flex: 1; }
-.date-name { font-size: 15px; font-weight: 700; color: var(--dark); }
-.date-when { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.date-countdown { font-size: 12px; font-weight: 700; color: var(--rose); margin-top: 3px; }
-.date-del { color: var(--muted); font-size: 18px; cursor: pointer; }
-
-/* Reminders screen */
-.reminder-info {
-  background: #EEEDF8; border: 1px solid rgba(31,27,86,0.18);
-  border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
-  font-size: 13px; color: var(--navy); line-height: 1.5;
-}
-.reminder-setting {
-  background: white; border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.reminder-setting .lbl { font-size: 14px; font-weight: 700; color: var(--dark); }
-.reminder-setting .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.toggle {
-  width: 46px; height: 26px; border-radius: 13px;
-  background: var(--rose-mid); position: relative;
-  cursor: pointer; transition: background 0.2s; flex-shrink: 0;
-  border: none;
-}
-.toggle.on { background: var(--rose); }
-.toggle::after {
-  content: ''; position: absolute;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: white; top: 3px; left: 3px;
-  transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.toggle.on::after { transform: translateX(20px); }
-.time-picker {
-  width: 100%; border: 1.5px solid var(--rose-mid);
-  border-radius: 12px; padding: 11px 14px;
-  font-family: 'Poppins', sans-serif; font-size: 14px;
-  color: var(--dark); background: white; outline: none;
-  margin-top: 8px;
-}
-.save-reminder-btn {
-  width: 100%; background: var(--navy); color: white;
-  border: none; border-radius: 12px; padding: 13px;
-  font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
-  cursor: pointer; margin-top: 12px;
-}
-.toast {
-  position: fixed; bottom: calc(var(--safe-bottom) + 80px);
-  left: 16px; right: 16px;
-  background: var(--navy); color: white;
-  border-radius: 12px; padding: 13px 16px;
-  font-size: 14px; font-weight: 700;
-  text-align: center; z-index: 200;
-  opacity: 0; transition: opacity 0.3s;
-  pointer-events: none;
-}
-.toast.show { opacity: 1; }
-
-/* Install banner */
-.install-banner {
-  background: var(--navy);
-  color: white; padding: 10px 16px;
-  font-size: 12px; line-height: 1.5;
-  text-align: center;
-  display: none;
-}
+#app{display:flex;flex-direction:column;height:100%}
+#screen-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-top:calc(var(--safe-top)+12px);padding-bottom:calc(var(--safe-bottom)+70px);-webkit-overflow-scrolling:touch}
+#nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);z-index:100}
+.nav-btn{flex:1;border:none;background:none;padding:10px 0 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Poppins',sans-serif}
+.nav-btn svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.2s}
+.nav-btn span{font-size:10px;color:var(--muted);letter-spacing:0.02em;transition:color 0.2s}
+.nav-btn.active svg{stroke:var(--coral)}
+.nav-btn.active span{color:var(--coral);font-weight:700}
+.screen{display:none;padding:0 16px}
+.screen.active{display:block}
+.page-header{margin-bottom:20px}
+.page-header .eyebrow{font-size:12px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
+.page-header h1{font-size:26px;font-weight:900;color:var(--navy);line-height:1.1}
+.page-header .sub{font-size:14px;color:var(--muted);margin-top:4px}
+.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+.card-sm{padding:12px 16px;margin-bottom:10px}
+.hero-card{background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;padding:20px;margin-bottom:20px;color:white}
+.hero-card .date-label{font-size:12px;opacity:0.75;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px}
+.hero-card h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.hero-card .sub{font-size:13px;opacity:0.8}
+.streak-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;margin-top:12px}
+.habit-item{display:flex;align-items:flex-start;gap:14px}
+.habit-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--coral-tint);background:white;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.habit-check.checked{background:var(--coral);border-color:var(--coral)}
+.habit-check.checked svg{display:block}
+.habit-check svg{display:none;width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.habit-text{flex:1}
+.habit-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.habit-desc{font-size:13px;color:var(--muted);line-height:1.45}
+.habit-time{font-size:11px;color:#EB4137;margin-top:5px;font-weight:700;letter-spacing:0.03em}
+.habit-title.done{text-decoration:line-through;opacity:0.5}
+.section-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.new-pair-btn{width:100%;border:1.5px solid var(--coral);border-radius:12px;background:white;color:var(--coral);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-top:4px;transition:background 0.15s}
+.new-pair-btn:active{background:var(--coral-tint)}
+.big-streak{text-align:center;padding:32px 20px;background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;color:white;margin-bottom:20px}
+.big-streak .num{font-size:72px;font-weight:900;line-height:1}
+.big-streak .label{font-size:14px;opacity:0.8;margin-top:6px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:center}
+.stat-card .val{font-size:26px;font-weight:900;color:var(--coral)}
+.stat-card .lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.note-input-area{margin-bottom:16px}
+.input-row{display:flex;gap:8px;margin-bottom:10px}
+.input-row input,.note-input-area textarea{flex:1;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;width:100%}
+.note-input-area textarea{min-height:80px;resize:none;display:block;margin-bottom:8px}
+.add-btn{background:var(--coral);color:white;border:none;border-radius:12px;padding:11px 16px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.note-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.note-body{flex:1}
+.note-tag{font-size:10px;font-weight:700;color:var(--coral);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.note-text{font-size:14px;color:var(--navy);line-height:1.5}
+.note-del{color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:2px 4px}
+.random-btn{width:100%;background:#EEEDF8;border:1.5px solid rgba(31,27,86,0.2);border-radius:12px;color:var(--navy);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:16px}
+.random-result{background:var(--navy);color:white;border-radius:14px;padding:16px;text-align:center;font-size:16px;font-style:italic;line-height:1.5;margin-bottom:16px;display:none}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab-btn{flex:1;border:1.5px solid var(--coral-tint);border-radius:10px;padding:9px 0;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:white;color:var(--muted)}
+.tab-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.date-form{margin-bottom:16px}
+.form-field{margin-bottom:10px}
+.form-field label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px}
+.form-field input,.form-field select{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.submit-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.date-item{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.date-icon{width:44px;height:44px;border-radius:12px;background:#EEEDF8;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.date-info{flex:1}
+.date-name{font-size:15px;font-weight:700;color:var(--navy)}
+.date-when{font-size:12px;color:var(--muted);margin-top:2px}
+.date-countdown{font-size:12px;font-weight:700;color:var(--coral);margin-top:3px}
+.date-del{color:var(--muted);font-size:18px;cursor:pointer}
+.reminder-info{background:#EEEDF8;border:1px solid rgba(31,27,86,0.18);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.5}
+.reminder-setting{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.reminder-setting .lbl{font-size:14px;font-weight:700;color:var(--navy)}
+.reminder-setting .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:46px;height:26px;border-radius:13px;background:var(--coral-tint);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--coral)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on::after{transform:translateX(20px)}
+.time-picker{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;margin-top:8px}
+.save-reminder-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
+.signout-btn{width:100%;background:white;color:var(--muted);border:1.5px solid var(--border);border-radius:12px;padding:11px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px}
+.user-email{font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+80px);left:16px;right:16px;background:var(--navy);color:white;border-radius:12px;padding:13px 16px;font-size:14px;font-weight:700;text-align:center;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--coral-tint);display:inline-block;margin-left:6px;vertical-align:middle}
+.sync-dot.synced{background:#4CAF50}
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
-
-<div id="installBanner" class="install-banner">
-  📱 Add to Home Screen: tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> for an app icon
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div class="logo">💕</div>
+  <h1>Happy Wife</h1>
+  <p>Sign in to sync your streak across all devices</p>
+  <div class="auth-card">
+    <div class="auth-tab">
+      <button class="active" onclick="switchAuthTab('login',this)">Sign in</button>
+      <button onclick="switchAuthTab('signup',this)">Sign up</button>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signIn()">Sign in</button>
+      <div class="auth-err" id="login-err"></div>
+      <div class="auth-forgot" onclick="resetPassword()">Forgot password?</div>
+    </div>
+    <div id="auth-signup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signup-password" placeholder="At least 6 characters"></div>
+      <button class="auth-btn" onclick="signUp()">Create account</button>
+      <div class="auth-err" id="signup-err"></div>
+    </div>
+  </div>
 </div>
 
-<div id="app">
+<div class="toast" id="toast"></div>
+
+<div id="app" style="display:none">
   <div id="screen-area">
 
     <!-- HOME -->
     <div class="screen active" id="screen-home">
       <div class="hero-card">
         <div class="date-label" id="heroDate"></div>
-        <h2>Your daily 2 ❤️</h2>
+        <h2>Your daily 2 ❤️ <span class="sync-dot" id="syncDot" title="Syncing..."></span></h2>
         <div class="sub">Two things to make her feel loved today</div>
         <div class="streak-pill">🔥 <span id="heroStreak">0 day streak</span></div>
       </div>
-
       <div id="habitCards"></div>
-
       <button class="new-pair-btn" onclick="refreshHabits()">↺ New pair for today</button>
     </div>
 
     <!-- STREAK -->
     <div class="screen" id="screen-streak">
-      <div class="page-header">
-        <div class="eyebrow">Progress</div>
-        <h1>Your streak</h1>
-      </div>
-      <div class="big-streak">
-        <div class="num" id="bigStreak">0</div>
-        <div class="label">days in a row 🔥</div>
-      </div>
+      <div class="page-header"><div class="eyebrow">Progress</div><h1>Your streak</h1></div>
+      <div class="big-streak"><div class="num" id="bigStreak">0</div><div class="label">days in a row 🔥</div></div>
       <div class="stat-grid">
-        <div class="stat-card">
-          <div class="val" id="statTotal">0</div>
-          <div class="lbl">Habits completed</div>
-        </div>
-        <div class="stat-card">
-          <div class="val" id="statBest">0</div>
-          <div class="lbl">Best streak</div>
-        </div>
-        <div class="stat-card">
-          <div class="val" id="statDays">0</div>
-          <div class="lbl">Days using app</div>
-        </div>
-        <div class="stat-card">
-          <div class="val" id="statDoneToday">0/2</div>
-          <div class="lbl">Done today</div>
-        </div>
+        <div class="stat-card"><div class="val" id="statTotal">0</div><div class="lbl">Habits completed</div></div>
+        <div class="stat-card"><div class="val" id="statBest">0</div><div class="lbl">Best streak</div></div>
+        <div class="stat-card"><div class="val" id="statDays">0</div><div class="lbl">Days using app</div></div>
+        <div class="stat-card"><div class="val" id="statDoneToday">0/2</div><div class="lbl">Done today</div></div>
       </div>
       <div class="section-label">Recent days</div>
       <div id="historyList"></div>
@@ -373,64 +193,34 @@ html, body { height: 100%; overflow: hidden; background: var(--cream); font-fami
 
     <!-- NOTES -->
     <div class="screen" id="screen-notes">
-      <div class="page-header">
-        <div class="eyebrow">Library</div>
-        <h1>Love notes</h1>
-        <div class="sub">Compliments, things you love about her, sweet nothings.</div>
-      </div>
+      <div class="page-header"><div class="eyebrow">Library</div><h1>Love notes</h1><div class="sub">Compliments, things you love about her, sweet nothings.</div></div>
       <button class="random-btn" onclick="showRandom()">✨ Show me a random one</button>
       <div class="random-result" id="randomResult"></div>
-
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchNoteTab('compliments', this)">Compliments</button>
-        <button class="tab-btn" onclick="switchNoteTab('love', this)">I love that...</button>
-        <button class="tab-btn" onclick="switchNoteTab('custom', this)">Custom</button>
+        <button class="tab-btn active" onclick="switchNoteTab('compliments',this)">Compliments</button>
+        <button class="tab-btn" onclick="switchNoteTab('love',this)">I love that...</button>
+        <button class="tab-btn" onclick="switchNoteTab('custom',this)">Custom</button>
       </div>
-
-      <div id="noteInputArea" class="note-input-area">
-        <div class="input-row">
-          <input type="text" id="noteInput" placeholder="Add a note..." />
-          <button class="add-btn" onclick="addNote()">Add</button>
-        </div>
+      <div class="note-input-area">
+        <div class="input-row"><input type="text" id="noteInput" placeholder="Add a note..."><button class="add-btn" onclick="addNote()">Add</button></div>
       </div>
-
       <div id="notesList"></div>
     </div>
 
     <!-- DATES -->
     <div class="screen" id="screen-dates">
-      <div class="page-header">
-        <div class="eyebrow">Important</div>
-        <h1>Special dates</h1>
-      </div>
+      <div class="page-header"><div class="eyebrow">Important</div><h1>Special dates</h1></div>
       <div class="card date-form">
         <div class="form-row">
-          <div class="form-field">
-            <label>Event name</label>
-            <input type="text" id="dateName" placeholder="Anniversary" />
-          </div>
-          <div class="form-field">
-            <label>Date</label>
-            <input type="date" id="dateVal" />
-          </div>
+          <div class="form-field"><label>Event name</label><input type="text" id="dateName" placeholder="Anniversary"></div>
+          <div class="form-field"><label>Date</label><input type="date" id="dateVal"></div>
         </div>
         <div class="form-row">
-          <div class="form-field">
-            <label>Type</label>
-            <select id="dateType">
-              <option value="💍">💍 Anniversary</option>
-              <option value="🎂">🎂 Birthday</option>
-              <option value="💕">💕 Special day</option>
-              <option value="🌹">🌹 Date night</option>
-              <option value="⭐">⭐ Other</option>
-            </select>
+          <div class="form-field"><label>Type</label>
+            <select id="dateType"><option value="💍">💍 Anniversary</option><option value="🎂">🎂 Birthday</option><option value="💕">💕 Special day</option><option value="🌹">🌹 Date night</option><option value="⭐">⭐ Other</option></select>
           </div>
-          <div class="form-field">
-            <label>Repeats yearly</label>
-            <select id="dateRepeat">
-              <option value="1">Yes</option>
-              <option value="0">No</option>
-            </select>
+          <div class="form-field"><label>Repeats yearly</label>
+            <select id="dateRepeat"><option value="1">Yes</option><option value="0">No</option></select>
           </div>
         </div>
         <button class="submit-btn" onclick="addDate()">Add date</button>
@@ -441,457 +231,375 @@ html, body { height: 100%; overflow: hidden; background: var(--cream); font-fami
 
     <!-- REMINDERS -->
     <div class="screen" id="screen-reminders">
-      <div class="page-header">
-        <div class="eyebrow">Settings</div>
-        <h1>Reminders</h1>
-      </div>
-      <div class="reminder-info">
-        ℹ️ Reminders use your browser's notification system. Tap "Enable" and allow notifications when prompted. Works best when this page is saved to your home screen.
-      </div>
-
+      <div class="page-header"><div class="eyebrow">Settings</div><h1>Reminders</h1></div>
+      <div class="reminder-info">ℹ️ Reminders use your browser's notification system. Tap "Save" and allow notifications when prompted.</div>
       <div class="reminder-setting">
-        <div>
-          <div class="lbl">Morning reminder</div>
-          <div class="sub">Start your day with your 2 habits</div>
-          <input type="time" class="time-picker" id="morningTime" value="08:00">
-        </div>
+        <div><div class="lbl">Morning reminder</div><div class="sub">Start your day with your 2 habits</div><input type="time" class="time-picker" id="morningTime" value="08:00"></div>
         <button class="toggle" id="toggleMorning" onclick="toggleReminder('morning')"></button>
       </div>
-
       <div class="reminder-setting">
-        <div>
-          <div class="lbl">Evening check-in</div>
-          <div class="sub">Remind you if habits aren't done yet</div>
-          <input type="time" class="time-picker" id="eveningTime" value="20:00">
-        </div>
+        <div><div class="lbl">Evening check-in</div><div class="sub">Remind you if habits aren't done yet</div><input type="time" class="time-picker" id="eveningTime" value="20:00"></div>
         <button class="toggle" id="toggleEvening" onclick="toggleReminder('evening')"></button>
       </div>
-
       <div class="reminder-setting">
-        <div>
-          <div class="lbl">Anniversary alerts</div>
-          <div class="sub">1 week before special dates</div>
-        </div>
+        <div><div class="lbl">Anniversary alerts</div><div class="sub">1 week before special dates</div></div>
         <button class="toggle" id="toggleDates" onclick="toggleReminder('dates')"></button>
       </div>
-
       <button class="save-reminder-btn" onclick="saveReminders()">Save reminder settings</button>
+      <div class="user-email" id="userEmail"></div>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
 
   </div>
 
-  <!-- Bottom Nav -->
   <nav id="nav">
-    <button class="nav-btn active" onclick="goTo('home', this)">
-      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
-      <span>Today</span>
+    <button class="nav-btn active" onclick="goTo('home',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>Today</span>
     </button>
-    <button class="nav-btn" onclick="goTo('streak', this)">
-      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <span>Streak</span>
+    <button class="nav-btn" onclick="goTo('streak',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Streak</span>
     </button>
-    <button class="nav-btn" onclick="goTo('notes', this)">
-      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      <span>Notes</span>
+    <button class="nav-btn" onclick="goTo('notes',this)">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Notes</span>
     </button>
-    <button class="nav-btn" onclick="goTo('dates', this)">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      <span>Dates</span>
+    <button class="nav-btn" onclick="goTo('dates',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Dates</span>
     </button>
-    <button class="nav-btn" onclick="goTo('reminders', this)">
-      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-      <span>Alerts</span>
+    <button class="nav-btn" onclick="goTo('reminders',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Settings</span>
     </button>
   </nav>
 </div>
 
 <script>
-// ─── Data ───────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://ujpwrinutaweqcxgjvvr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqcHdyaW51dGF3ZXFjeGdqdnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTQ5NTIsImV4cCI6MjEwNjUzMDk1Mn0.bGyogL1nmt7Qi553gPkCZ3CBXNT6gujAdpa85G2xoEc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const habits = [
-  { title: "Morning hug or kiss", desc: "Before phones, before rushing out. Ten seconds.", time: "Morning · ~10 sec" },
-  { title: "Say 'I love you' unprompted", desc: "No occasion. Just because.", time: "Anytime" },
-  { title: "Send a sweet text", desc: "One genuine line during the day.", time: "Midday · ~1 min" },
-  { title: "A specific compliment", desc: "Name exactly what caught your eye — not just 'you look nice.'", time: "Anytime · 30 sec" },
-  { title: "Make her coffee or tea", desc: "The way she likes it, without being asked.", time: "Morning · ~3 min" },
-  { title: "Take a task off her plate", desc: "Do something she usually handles. Just handle it.", time: "Varies" },
-  { title: "Leave a kind note", desc: "Sticky note, a text, anything she'll find later.", time: "~2 min" },
-  { title: "Ask about her day and really listen", desc: "Phone down. Follow up on something from yesterday.", time: "Evening · ~10 min" },
-  { title: "Phone down for 30 minutes", desc: "Fully present. No screens, no half-listening.", time: "Evening · 30 min" },
-  { title: "Pick up her favorite snack", desc: "Remember what she likes. Show up with it.", time: "~2 min" },
-  { title: "Thank her for something specific", desc: "Name what she did and why it mattered.", time: "~1 min" },
-  { title: "Watch her show with her", desc: "No commentary. Just enjoy it together.", time: "Evening · ~30 min" },
-  { title: "Share something funny", desc: "A meme, clip, or story that made you think of her.", time: "Anytime · 1 min" },
-  { title: "Short walk together", desc: "Even 10 minutes around the block.", time: "~10–20 min" },
-  { title: "Notice when she's tired", desc: "Offer rest, or take over something without being asked.", time: "Anytime" },
-  { title: "Refill her water bottle", desc: "Small, consistent, thoughtful.", time: "30 sec" },
-  { title: "Ask her opinion on something real", desc: "Something that actually matters to you.", time: "~5 min" },
-  { title: "Acknowledge something she handled well", desc: "Point it out. She may not know you noticed.", time: "~1 min" },
-  { title: "Bring her one flower", desc: "Not a bouquet — just one. From the store or the yard.", time: "~2 min" },
-  { title: "Tell her what you admire about her", desc: "A character trait, not just how she looks.", time: "~2 min" },
+  {title:"Morning hug or kiss",desc:"Before phones, before rushing out. Ten seconds.",time:"Morning · ~10 sec"},
+  {title:"Say 'I love you' unprompted",desc:"No occasion. Just because.",time:"Anytime"},
+  {title:"Send a sweet text",desc:"One genuine line during the day.",time:"Midday · ~1 min"},
+  {title:"A specific compliment",desc:"Name exactly what caught your eye — not just 'you look nice.'",time:"Anytime · 30 sec"},
+  {title:"Make her coffee or tea",desc:"The way she likes it, without being asked.",time:"Morning · ~3 min"},
+  {title:"Take a task off her plate",desc:"Do something she usually handles. Just handle it.",time:"Varies"},
+  {title:"Leave a kind note",desc:"Sticky note, a text, anything she'll find later.",time:"~2 min"},
+  {title:"Ask about her day and really listen",desc:"Phone down. Follow up on something from yesterday.",time:"Evening · ~10 min"},
+  {title:"Phone down for 30 minutes",desc:"Fully present. No screens, no half-listening.",time:"Evening · 30 min"},
+  {title:"Pick up her favorite snack",desc:"Remember what she likes. Show up with it.",time:"~2 min"},
+  {title:"Thank her for something specific",desc:"Name what she did and why it mattered.",time:"~1 min"},
+  {title:"Watch her show with her",desc:"No commentary. Just enjoy it together.",time:"Evening · ~30 min"},
+  {title:"Share something funny",desc:"A meme, clip, or story that made you think of her.",time:"Anytime · 1 min"},
+  {title:"Short walk together",desc:"Even 10 minutes around the block.",time:"~10–20 min"},
+  {title:"Notice when she's tired",desc:"Offer rest, or take over something without being asked.",time:"Anytime"},
+  {title:"Refill her water bottle",desc:"Small, consistent, thoughtful.",time:"30 sec"},
+  {title:"Ask her opinion on something real",desc:"Something that actually matters to you.",time:"~5 min"},
+  {title:"Acknowledge something she handled well",desc:"Point it out. She may not know you noticed.",time:"~1 min"},
+  {title:"Bring her one flower",desc:"Not a bouquet — just one. From the store or the yard.",time:"~2 min"},
+  {title:"Tell her what you admire about her",desc:"A character trait, not just how she looks.",time:"~2 min"},
 ];
-
 const defaultNotes = {
-  compliments: ["Your smile lights up every room you walk into","You're the most beautiful woman I've ever seen","You have the most incredible laugh","You make everything more beautiful just by being there","You're even more stunning than the day we met"],
-  love: ["I love the way you laugh at your own jokes","I love how much you care about the people around you","I love watching you light up when you talk about something you're passionate about","I love how kind you are, even when no one's watching","I love the way you make ordinary moments feel special"],
-  custom: []
+  compliments:["Your smile lights up every room you walk into","You're the most beautiful woman I've ever seen","You have the most incredible laugh","You make everything more beautiful just by being there"],
+  love:["I love the way you laugh at your own jokes","I love how much you care about the people around you","I love watching you light up when you talk about something you're passionate about","I love how kind you are, even when no one's watching"],
+  custom:[]
 };
 
-const LS = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
-};
-
+let currentUser = null;
 let state = {
   today: new Date().toDateString(),
-  todayPair: LS.get('todayPair', null),
-  todayDate: LS.get('todayDate', null),
-  done: LS.get('done', [false, false]),
-  usedHabits: LS.get('usedHabits', []),
-  streak: LS.get('streak', 0),
-  bestStreak: LS.get('bestStreak', 0),
-  lastStreakDay: LS.get('lastStreakDay', ''),
-  totalDone: LS.get('totalDone', 0),
-  daysUsed: LS.get('daysUsed', 0),
-  firstUsed: LS.get('firstUsed', new Date().toDateString()),
-  history: LS.get('history', []),
-  notes: LS.get('notes', defaultNotes),
-  dates: LS.get('dates', []),
-  reminders: LS.get('reminders', { morning: false, evening: false, dates: false, morningTime: '08:00', eveningTime: '20:00' }),
-  activeNoteTab: 'compliments'
+  todayPair: null, todayDate: null,
+  done: [false,false], usedHabits: [],
+  streak: 0, bestStreak: 0, lastStreakDay: '',
+  totalDone: 0, daysUsed: 0, history: [],
+  notes: JSON.parse(JSON.stringify(defaultNotes)),
+  dates: [],
+  reminders: {morning:false,evening:false,dates:false,morningTime:'08:00',eveningTime:'20:00'}
 };
+let syncTimer = null;
+let currentNoteTab = 'compliments';
 
-// ─── Init ────────────────────────────────────────────────────────────────────
-function init() {
-  // Reset done if new day
-  if (state.todayDate !== state.today) {
-    state.done = [false, false];
-    state.todayDate = state.today;
-    state.todayPair = null;
-    state.daysUsed += 1;
-    LS.set('daysUsed', state.daysUsed);
-    LS.set('todayDate', state.today);
-  }
-  if (!state.todayPair) pickPair();
-
-  // Show install banner on mobile
-  if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone) {
-    document.getElementById('installBanner').style.display = 'block';
-  }
-
-  renderHome();
-  renderStreak();
-  renderNotes();
-  renderDates();
-  renderReminders();
+// ── Auth ─────────────────────────────────────────────────────
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('auth-login').style.display = tab==='login'?'':'none';
+  document.getElementById('auth-signup').style.display = tab==='signup'?'':'none';
 }
 
-// ─── Habits ──────────────────────────────────────────────────────────────────
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signInWithPassword({email, password:pass});
+  if(error) err.textContent = error.message;
+}
+
+async function signUp() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  const err = document.getElementById('signup-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signUp({email, password:pass});
+  if(error) err.textContent = error.message;
+  else err.style.color='green', err.textContent = 'Check your email to confirm your account!';
+}
+
+async function resetPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if(!email){document.getElementById('login-err').textContent='Enter your email first';return;}
+  await sb.auth.resetPasswordForEmail(email);
+  document.getElementById('login-err').style.color='green';
+  document.getElementById('login-err').textContent='Password reset email sent!';
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ── Supabase sync ─────────────────────────────────────────────
+async function loadFromCloud() {
+  if(!currentUser) return;
+  setSyncDot(false);
+  const {data,error} = await sb.from('user_data').select('*').eq('user_id',currentUser.id).single();
+  if(error && error.code !== 'PGRST116') { console.error(error); setSyncDot(true); return; }
+  if(data) {
+    state.streak = data.streak||0;
+    state.bestStreak = data.best_streak||0;
+    state.lastStreakDay = data.last_streak_day||'';
+    state.totalDone = data.total_done||0;
+    state.daysUsed = data.days_used||0;
+    state.history = data.history||[];
+    state.notes = data.notes||JSON.parse(JSON.stringify(defaultNotes));
+    state.dates = data.dates||[];
+    state.reminders = data.reminders||state.reminders;
+    state.todayPair = data.today_pair||null;
+    state.todayDate = data.today_date||null;
+    state.done = data.done||[false,false];
+    state.usedHabits = data.used_habits||[];
+  }
+  setSyncDot(true);
+}
+
+async function saveToCloud() {
+  if(!currentUser) return;
+  setSyncDot(false);
+  const payload = {
+    user_id: currentUser.id,
+    streak: state.streak, best_streak: state.bestStreak,
+    last_streak_day: state.lastStreakDay, total_done: state.totalDone,
+    days_used: state.daysUsed, history: state.history,
+    notes: state.notes, dates: state.dates, reminders: state.reminders,
+    today_pair: state.todayPair, today_date: state.todayDate,
+    done: state.done, used_habits: state.usedHabits,
+    updated_at: new Date().toISOString()
+  };
+  await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+  setSyncDot(true);
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveToCloud, 1500);
+}
+
+function setSyncDot(synced) {
+  const d = document.getElementById('syncDot');
+  if(d) d.className = 'sync-dot'+(synced?' synced':'');
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function initApp(user) {
+  currentUser = user;
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('userEmail').textContent = user.email;
+
+  await loadFromCloud();
+
+  if(state.todayDate !== state.today) {
+    state.done=[false,false]; state.todayDate=state.today;
+    state.todayPair=null; state.daysUsed++;
+  }
+  if(!state.todayPair) pickPair();
+
+  renderAll();
+}
+
+function renderAll() {
+  renderHome(); renderStreak(); renderNotes(); renderDates(); renderReminders();
+}
+
+// ── Habits ────────────────────────────────────────────────────
 function pickPair() {
-  let avail = habits.map((_, i) => i).filter(i => !state.usedHabits.includes(i));
-  if (avail.length < 2) { state.usedHabits = []; avail = habits.map((_, i) => i); }
-  const shuffled = avail.sort(() => Math.random() - 0.5);
-  state.todayPair = shuffled.slice(0, 2);
-  state.usedHabits = [...state.usedHabits, ...state.todayPair].slice(-14);
-  LS.set('todayPair', state.todayPair);
-  LS.set('usedHabits', state.usedHabits);
+  let avail = habits.map((_,i)=>i).filter(i=>!state.usedHabits.includes(i));
+  if(avail.length<2){state.usedHabits=[];avail=habits.map((_,i)=>i);}
+  const shuffled = avail.sort(()=>Math.random()-0.5);
+  state.todayPair = shuffled.slice(0,2);
+  state.usedHabits = [...state.usedHabits,...state.todayPair].slice(-14);
 }
 
 function refreshHabits() {
-  state.done = [false, false];
-  LS.set('done', state.done);
-  pickPair();
-  renderHome();
-  renderStreak();
-  showToast("New habits picked ✓");
+  state.done=[false,false]; pickPair(); renderHome(); renderStreak();
+  scheduleSave(); showToast("New habits picked ✓");
 }
 
 function toggleDone(idx) {
-  const wasDone = state.done[idx];
-  state.done[idx] = !wasDone;
-  if (!wasDone) state.totalDone++;
-  else if (state.totalDone > 0) state.totalDone--;
-  LS.set('done', state.done);
-  LS.set('totalDone', state.totalDone);
-
-  // Both done → update streak
-  if (state.done[0] && state.done[1]) {
-    updateStreak();
-    showToast("Both done! She's lucky to have you 💕");
-  }
-  renderHome();
-  renderStreak();
+  state.done[idx]=!state.done[idx];
+  if(state.done[idx]) state.totalDone++; else if(state.totalDone>0) state.totalDone--;
+  if(state.done[0]&&state.done[1]) { updateStreak(); showToast("Both done! She's lucky to have you 💕"); }
+  renderHome(); renderStreak(); scheduleSave();
 }
 
 function updateStreak() {
-  if (state.lastStreakDay === state.today) return;
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  if (state.lastStreakDay === yesterday.toDateString()) {
-    state.streak++;
-  } else if (state.lastStreakDay !== state.today) {
-    state.streak = 1;
-  }
+  if(state.lastStreakDay===state.today) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  state.streak = state.lastStreakDay===yesterday.toDateString() ? state.streak+1 : 1;
   state.bestStreak = Math.max(state.bestStreak, state.streak);
   state.lastStreakDay = state.today;
-
-  // Log history
-  state.history = [{ date: state.today, done: true }, ...state.history].slice(0, 30);
-  LS.set('streak', state.streak);
-  LS.set('bestStreak', state.bestStreak);
-  LS.set('lastStreakDay', state.lastStreakDay);
-  LS.set('history', state.history);
+  state.history = [{date:state.today,done:true},...state.history].slice(0,30);
 }
 
-// ─── Render Home ─────────────────────────────────────────────────────────────
 function renderHome() {
-  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  document.getElementById('heroStreak').textContent = state.streak + (state.streak === 1 ? ' day streak' : ' day streak');
-
+  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('heroStreak').textContent = state.streak+(state.streak===1?' day streak':' day streak');
   const container = document.getElementById('habitCards');
-  container.innerHTML = '';
-  state.todayPair.forEach((hi, idx) => {
-    const h = habits[hi];
-    const done = state.done[idx];
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="habit-item">
-        <div class="habit-check ${done ? 'checked' : ''}" onclick="toggleDone(${idx})">
-          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div class="habit-text">
-          <div class="habit-title ${done ? 'done' : ''}">${h.title}</div>
-          <div class="habit-desc">${h.desc}</div>
-          <div class="habit-time">${h.time}</div>
-        </div>
-      </div>`;
+  container.innerHTML='';
+  if(!state.todayPair) return;
+  state.todayPair.forEach((hi,idx)=>{
+    const h=habits[hi], done=state.done[idx];
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="habit-item"><div class="habit-check ${done?'checked':''}" onclick="toggleDone(${idx})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="habit-text"><div class="habit-title ${done?'done':''}">${h.title}</div><div class="habit-desc">${h.desc}</div><div class="habit-time">${h.time}</div></div></div>`;
     container.appendChild(card);
   });
 }
 
-// ─── Render Streak ───────────────────────────────────────────────────────────
+// ── Streak ────────────────────────────────────────────────────
 function renderStreak() {
-  document.getElementById('bigStreak').textContent = state.streak;
-  document.getElementById('statTotal').textContent = state.totalDone;
-  document.getElementById('statBest').textContent = state.bestStreak;
-  document.getElementById('statDays').textContent = state.daysUsed;
-  document.getElementById('statDoneToday').textContent = state.done.filter(Boolean).length + '/2';
-
-  const list = document.getElementById('historyList');
-  if (state.history.length === 0) {
-    list.innerHTML = '<div style="font-size:14px;color:var(--muted);text-align:center;padding:20px">No history yet — complete both habits today!</div>';
-    return;
-  }
-  list.innerHTML = state.history.slice(0, 7).map(h => `
-    <div class="card card-sm" style="display:flex;align-items:center;gap:12px">
-      <span style="font-size:18px">${h.done ? '✅' : '⬜'}</span>
-      <span style="font-size:14px;color:var(--dark)">${new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span>
-      <span style="margin-left:auto;font-size:12px;font-weight:700;color:${h.done ? 'var(--rose)' : 'var(--muted)'}">${h.done ? 'Complete' : 'Missed'}</span>
-    </div>`).join('');
+  document.getElementById('bigStreak').textContent=state.streak;
+  document.getElementById('statTotal').textContent=state.totalDone;
+  document.getElementById('statBest').textContent=state.bestStreak;
+  document.getElementById('statDays').textContent=state.daysUsed;
+  document.getElementById('statDoneToday').textContent=state.done.filter(Boolean).length+'/2';
+  const list=document.getElementById('historyList');
+  if(!state.history.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:20px">No history yet — complete both habits today!</div>';return;}
+  list.innerHTML=state.history.slice(0,7).map(h=>`<div class="card card-sm" style="display:flex;align-items:center;gap:12px"><span style="font-size:18px">${h.done?'✅':'⬜'}</span><span style="font-size:14px;color:var(--navy)">${new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:${h.done?'var(--coral)':'var(--muted)'}">${h.done?'Complete':'Missed'}</span></div>`).join('');
 }
 
-// ─── Notes ───────────────────────────────────────────────────────────────────
-let currentNoteTab = 'compliments';
-function switchNoteTab(tab, btn) {
-  currentNoteTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+// ── Notes ─────────────────────────────────────────────────────
+function switchNoteTab(tab,btn) {
+  currentNoteTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('noteInput').placeholder = tab === 'compliments' ? 'Add a compliment...' : tab === 'love' ? "I love that you..." : 'Add a custom note...';
+  document.getElementById('noteInput').placeholder=tab==='compliments'?'Add a compliment...':tab==='love'?'I love that you...':'Add a custom note...';
   renderNotes();
 }
-
 function addNote() {
-  const input = document.getElementById('noteInput');
-  const text = input.value.trim();
-  if (!text) { showToast("Type something first"); return; }
-  state.notes[currentNoteTab] = [text, ...state.notes[currentNoteTab]];
-  LS.set('notes', state.notes);
-  input.value = '';
-  renderNotes();
-  showToast("Note saved ❤️");
+  const input=document.getElementById('noteInput');
+  const text=input.value.trim();
+  if(!text){showToast("Type something first");return;}
+  state.notes[currentNoteTab]=[text,...state.notes[currentNoteTab]];
+  input.value=''; renderNotes(); scheduleSave(); showToast("Note saved ❤️");
+}
+function deleteNote(tab,idx){state.notes[tab].splice(idx,1);renderNotes();scheduleSave();}
+function showRandom(){
+  const all=[...state.notes.compliments,...state.notes.love,...state.notes.custom];
+  if(!all.length){showToast("Add some notes first!");return;}
+  const r=all[Math.floor(Math.random()*all.length)];
+  const el=document.getElementById('randomResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function renderNotes(){
+  const list=document.getElementById('notesList');
+  const notes=state.notes[currentNoteTab];
+  const label=currentNoteTab==='compliments'?'Compliment':currentNoteTab==='love'?'I love that...':'Note';
+  if(!notes.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No notes yet — add one above!</div>';return;}
+  list.innerHTML=notes.map((n,i)=>`<div class="note-card"><div class="note-body"><div class="note-tag">${label}</div><div class="note-text">${n}</div></div><span class="note-del" onclick="deleteNote('${currentNoteTab}',${i})">×</span></div>`).join('');
 }
 
-function deleteNote(tab, idx) {
-  state.notes[tab].splice(idx, 1);
-  LS.set('notes', state.notes);
-  renderNotes();
+// ── Dates ─────────────────────────────────────────────────────
+function addDate(){
+  const name=document.getElementById('dateName').value.trim();
+  const val=document.getElementById('dateVal').value;
+  const type=document.getElementById('dateType').value;
+  const repeat=document.getElementById('dateRepeat').value==='1';
+  if(!name||!val){showToast("Fill in name and date");return;}
+  state.dates.push({name,val,type,repeat});
+  document.getElementById('dateName').value='';
+  document.getElementById('dateVal').value='';
+  renderDates(); scheduleSave(); showToast("Date saved 📅");
 }
-
-function showRandom() {
-  const all = [...state.notes.compliments, ...state.notes.love, ...state.notes.custom];
-  if (all.length === 0) { showToast("Add some notes first!"); return; }
-  const r = all[Math.floor(Math.random() * all.length)];
-  const el = document.getElementById('randomResult');
-  el.textContent = '"' + r + '"';
-  el.style.display = 'block';
+function deleteDate(idx){state.dates.splice(idx,1);renderDates();scheduleSave();}
+function daysUntil(dateStr,repeat){
+  const now=new Date();now.setHours(0,0,0,0);
+  let d=new Date(dateStr+'T00:00:00');
+  if(repeat){d.setFullYear(now.getFullYear());if(d<now)d.setFullYear(now.getFullYear()+1);}
+  const diff=Math.round((d-now)/86400000);
+  if(diff===0)return'🎉 Today!';if(diff===1)return'Tomorrow';if(diff<0)return repeat?'':'Passed';
+  return'In '+diff+' days';
 }
-
-function renderNotes() {
-  const list = document.getElementById('notesList');
-  const notes = state.notes[currentNoteTab];
-  if (notes.length === 0) {
-    list.innerHTML = '<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No notes yet — add one above!</div>';
-    return;
-  }
-  const tabLabel = currentNoteTab === 'compliments' ? 'Compliment' : currentNoteTab === 'love' ? 'I love that...' : 'Note';
-  list.innerHTML = notes.map((n, i) => `
-    <div class="note-card">
-      <div class="note-body">
-        <div class="note-tag">${tabLabel}</div>
-        <div class="note-text">${n}</div>
-      </div>
-      <span class="note-del" onclick="deleteNote('${currentNoteTab}', ${i})">×</span>
-    </div>`).join('');
-}
-
-// ─── Dates ───────────────────────────────────────────────────────────────────
-function addDate() {
-  const name = document.getElementById('dateName').value.trim();
-  const val = document.getElementById('dateVal').value;
-  const type = document.getElementById('dateType').value;
-  const repeat = document.getElementById('dateRepeat').value === '1';
-  if (!name || !val) { showToast("Fill in name and date"); return; }
-  state.dates.push({ name, val, type, repeat });
-  LS.set('dates', state.dates);
-  document.getElementById('dateName').value = '';
-  document.getElementById('dateVal').value = '';
-  renderDates();
-  showToast("Date saved 📅");
-}
-
-function deleteDate(idx) {
-  state.dates.splice(idx, 1);
-  LS.set('dates', state.dates);
-  renderDates();
-}
-
-function daysUntil(dateStr, repeat) {
-  const now = new Date(); now.setHours(0,0,0,0);
-  let d = new Date(dateStr + 'T00:00:00');
-  if (repeat) {
-    d.setFullYear(now.getFullYear());
-    if (d < now) d.setFullYear(now.getFullYear() + 1);
-  }
-  const diff = Math.round((d - now) / 86400000);
-  if (diff === 0) return '🎉 Today!';
-  if (diff === 1) return 'Tomorrow';
-  if (diff < 0) return repeat ? '' : 'Passed';
-  return 'In ' + diff + ' days';
-}
-
-function renderDates() {
-  const list = document.getElementById('datesList');
-  if (state.dates.length === 0) {
-    list.innerHTML = '<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No dates saved yet</div>';
-    return;
-  }
-  const sorted = [...state.dates].map((d, i) => ({ ...d, i })).sort((a, b) => {
-    const da = new Date(a.val + 'T00:00:00'), db = new Date(b.val + 'T00:00:00');
-    const now = new Date(); now.setHours(0,0,0,0);
-    if (a.repeat) { da.setFullYear(now.getFullYear()); if (da < now) da.setFullYear(now.getFullYear()+1); }
-    if (b.repeat) { db.setFullYear(now.getFullYear()); if (db < now) db.setFullYear(now.getFullYear()+1); }
-    return da - db;
+function renderDates(){
+  const list=document.getElementById('datesList');
+  if(!state.dates.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No dates saved yet</div>';return;}
+  const sorted=[...state.dates].map((d,i)=>({...d,i})).sort((a,b)=>{
+    const now=new Date();now.setHours(0,0,0,0);
+    const da=new Date(a.val+'T00:00:00'),db=new Date(b.val+'T00:00:00');
+    if(a.repeat){da.setFullYear(now.getFullYear());if(da<now)da.setFullYear(now.getFullYear()+1);}
+    if(b.repeat){db.setFullYear(now.getFullYear());if(db<now)db.setFullYear(now.getFullYear()+1);}
+    return da-db;
   });
-  list.innerHTML = sorted.map(d => {
-    const disp = new Date(d.val + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: d.repeat ? undefined : 'numeric' });
-    const cnt = daysUntil(d.val, d.repeat);
-    return `<div class="date-item">
-      <div class="date-icon">${d.type}</div>
-      <div class="date-info">
-        <div class="date-name">${d.name}</div>
-        <div class="date-when">${disp}${d.repeat ? ' · every year' : ''}</div>
-        ${cnt ? `<div class="date-countdown">${cnt}</div>` : ''}
-      </div>
-      <span class="date-del" onclick="deleteDate(${d.i})">×</span>
-    </div>`;
+  list.innerHTML=sorted.map(d=>{
+    const disp=new Date(d.val+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:d.repeat?undefined:'numeric'});
+    const cnt=daysUntil(d.val,d.repeat);
+    return`<div class="date-item"><div class="date-icon">${d.type}</div><div class="date-info"><div class="date-name">${d.name}</div><div class="date-when">${disp}${d.repeat?' · every year':''}</div>${cnt?`<div class="date-countdown">${cnt}</div>`:''}</div><span class="date-del" onclick="deleteDate(${d.i})">×</span></div>`;
   }).join('');
 }
 
-// ─── Reminders ───────────────────────────────────────────────────────────────
-function renderReminders() {
-  ['morning', 'evening', 'dates'].forEach(k => {
-    const btn = document.getElementById('toggle' + k.charAt(0).toUpperCase() + k.slice(1));
-    if (btn) btn.className = 'toggle' + (state.reminders[k] ? ' on' : '');
+// ── Reminders ─────────────────────────────────────────────────
+function toggleReminder(key){state.reminders[key]=!state.reminders[key];renderReminders();}
+function renderReminders(){
+  ['morning','evening','dates'].forEach(k=>{
+    const btn=document.getElementById('toggle'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(btn)btn.className='toggle'+(state.reminders[k]?' on':'');
   });
-  document.getElementById('morningTime').value = state.reminders.morningTime || '08:00';
-  document.getElementById('eveningTime').value = state.reminders.eveningTime || '20:00';
+  document.getElementById('morningTime').value=state.reminders.morningTime||'08:00';
+  document.getElementById('eveningTime').value=state.reminders.eveningTime||'20:00';
+}
+async function saveReminders(){
+  state.reminders.morningTime=document.getElementById('morningTime').value;
+  state.reminders.eveningTime=document.getElementById('eveningTime').value;
+  await saveToCloud(); showToast("Settings saved ✓");
 }
 
-function toggleReminder(key) {
-  state.reminders[key] = !state.reminders[key];
-  renderReminders();
-}
-
-async function saveReminders() {
-  state.reminders.morningTime = document.getElementById('morningTime').value;
-  state.reminders.eveningTime = document.getElementById('eveningTime').value;
-  LS.set('reminders', state.reminders);
-
-  if (state.reminders.morning || state.reminders.evening || state.reminders.dates) {
-    if ('Notification' in window) {
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') {
-        scheduleNotifications();
-        showToast("Reminders saved ✓ Notifications on!");
-      } else {
-        showToast("Allow notifications in your browser settings");
-      }
-    } else {
-      showToast("Reminders saved (notifications not supported on this device)");
-    }
-  } else {
-    showToast("Reminders saved ✓");
-  }
-}
-
-function scheduleNotifications() {
-  // Note: browser notifications fire when page is open.
-  // For persistent notifications, a service worker would be needed.
-  const now = new Date();
-  if (state.reminders.morning) {
-    const [h, m] = state.reminders.morningTime.split(':').map(Number);
-    let t = new Date(); t.setHours(h, m, 0, 0);
-    if (t < now) t.setDate(t.getDate() + 1);
-    setTimeout(() => {
-      new Notification('Happy Wife App 💕', { body: "Good morning! Check your 2 daily habits ❤️", icon: '' });
-    }, t - now);
-  }
-  if (state.reminders.evening) {
-    const [h, m] = state.reminders.eveningTime.split(':').map(Number);
-    let t = new Date(); t.setHours(h, m, 0, 0);
-    if (t < now) t.setDate(t.getDate() + 1);
-    setTimeout(() => {
-      const cnt = state.done.filter(Boolean).length;
-      if (cnt < 2) new Notification('Happy Wife App 💕', { body: `You've done ${cnt}/2 habits today. Quick — she's worth it! ❤️`, icon: '' });
-    }, t - now);
-  }
-}
-
-// ─── Navigation ──────────────────────────────────────────────────────────────
-function goTo(screen, btn) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('screen-' + screen).classList.add('active');
+// ── Nav & utils ───────────────────────────────────────────────
+function goTo(screen,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
   btn.classList.add('active');
-  document.getElementById('screen-area').scrollTop = 0;
+  document.getElementById('screen-area').scrollTop=0;
 }
-
-// ─── Toast ───────────────────────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
 }
 
-init();
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
+// ── Boot ──────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(session?.user) {
+    await initApp(session.user);
+  } else {
+    document.getElementById('auth-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+  }
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
 </script>
 </body>
