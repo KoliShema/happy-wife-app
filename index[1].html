@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Happy Wife">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231F1B56'/%3E%3Ctext y='.9em' font-size='80' text-anchor='middle' x='50'%3E%F0%9F%92%95%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Daily habits to keep your wife happy.">
+<meta name="theme-color" content="#1F1B56">
+<link rel="manifest" href="manifest.json">
+<title>Happy Wife</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --navy: #1F1B56; --coral: #EB4137; --coral-tint: #F3A79E;
+  --cream: #FAF9F6; --muted: #7472A0; --border: rgba(31,27,86,0.12);
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppins',sans-serif;color:var(--navy)}
+
+/* Auth screen */
+#splash{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000}
+.splash-heart{font-size:54px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}
+
+#auth-screen{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;z-index:999;
+}
+#auth-screen .logo{font-size:48px;margin-bottom:8px}
+#auth-screen h1{color:white;font-size:24px;font-weight:900;margin-bottom:4px}
+#auth-screen p{color:var(--coral-tint);font-size:13px;margin-bottom:32px;text-align:center}
+.auth-card{background:white;border-radius:20px;padding:24px;width:100%;max-width:340px}
+.auth-tab{display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.auth-tab button{flex:1;padding:10px;border:none;background:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.auth-tab button.active{background:var(--navy);color:white}
+.auth-field{margin-bottom:12px}
+.auth-field label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase}
+.auth-field input{width:100%;border:1.5px solid var(--coral-tint);border-radius:10px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);outline:none}
+.auth-field input:focus{border-color:var(--navy)}
+.auth-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.auth-btn:active{opacity:0.85}
+.auth-err{font-size:12px;color:var(--coral);text-align:center;margin-top:8px;min-height:18px}
+.auth-forgot{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.google-btn{width:100%;background:white;color:#3c4043;border:1.5px solid #dadce0;border-radius:12px;padding:12px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.google-btn:active{background:#f8f9fa}
+
+/* Desktop: constrain app width so it looks like a phone */
+@media (min-width: 600px) {
+  #app{max-width:480px;margin:0 auto;box-shadow:0 0 40px rgba(31,27,86,0.1);background:var(--cream)}
+  #nav{max-width:480px;left:50%;transform:translateX(-50%)}
+}
+
+/* App shell */
+#app{display:flex;flex-direction:column;height:100%}
+#screen-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-top:calc(var(--safe-top)+12px);padding-bottom:calc(var(--safe-bottom)+70px);-webkit-overflow-scrolling:touch}
+#nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);z-index:100}
+.nav-btn{flex:1;border:none;background:none;padding:10px 0 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Poppins',sans-serif}
+.nav-btn svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.2s}
+.nav-btn span{font-size:10px;color:var(--muted);letter-spacing:0.02em;transition:color 0.2s}
+.nav-btn.active svg{stroke:var(--coral)}
+.nav-btn.active span{color:var(--coral);font-weight:700}
+.screen{display:none;padding:0 16px}
+.screen.active{display:block}
+.page-header{margin-bottom:20px}
+.page-header .eyebrow{font-size:12px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
+.page-header h1{font-size:26px;font-weight:900;color:var(--navy);line-height:1.1}
+.page-header .sub{font-size:14px;color:var(--muted);margin-top:4px}
+.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+.card-sm{padding:12px 16px;margin-bottom:10px}
+.hero-card{background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;padding:20px;margin-bottom:20px;color:white}
+.hero-card .date-label{font-size:12px;opacity:0.75;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px}
+.hero-card h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.hero-card .sub{font-size:13px;opacity:0.8}
+.streak-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;margin-top:12px}
+.habit-item{display:flex;align-items:flex-start;gap:14px}
+.habit-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--coral-tint);background:white;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.habit-check.checked{background:var(--coral);border-color:var(--coral)}
+.habit-check.checked svg{display:block}
+.habit-check svg{display:none;width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.habit-text{flex:1}
+.habit-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.habit-desc{font-size:13px;color:var(--muted);line-height:1.45}
+.habit-time{font-size:11px;color:#EB4137;margin-top:5px;font-weight:700;letter-spacing:0.03em}
+.habit-title.done{text-decoration:line-through;opacity:0.5}
+.section-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.new-pair-btn{width:100%;border:1.5px solid var(--coral);border-radius:12px;background:white;color:var(--coral);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-top:4px;transition:background 0.15s}
+.new-pair-btn:active{background:var(--coral-tint)}
+.big-streak{text-align:center;padding:32px 20px;background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;color:white;margin-bottom:20px}
+.big-streak .num{font-size:72px;font-weight:900;line-height:1}
+.big-streak .label{font-size:14px;opacity:0.8;margin-top:6px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:center}
+.stat-card .val{font-size:26px;font-weight:900;color:var(--coral)}
+.stat-card .lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.note-input-area{margin-bottom:16px}
+.input-row{display:flex;gap:8px;margin-bottom:10px}
+.input-row input,.note-input-area textarea{flex:1;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;width:100%}
+.note-input-area textarea{min-height:80px;resize:none;display:block;margin-bottom:8px}
+.add-btn{background:var(--coral);color:white;border:none;border-radius:12px;padding:11px 16px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.note-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.note-body{flex:1}
+.note-tag{font-size:10px;font-weight:700;color:var(--coral);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.note-text{font-size:14px;color:var(--navy);line-height:1.5}
+.note-del{color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:2px 4px}
+.random-btn{width:100%;background:#EEEDF8;border:1.5px solid rgba(31,27,86,0.2);border-radius:12px;color:var(--navy);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:16px}
+.random-result{background:var(--navy);color:white;border-radius:14px;padding:16px;text-align:center;font-size:16px;font-style:italic;line-height:1.5;margin-bottom:16px;display:none}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab-btn{flex:1;border:1.5px solid var(--coral-tint);border-radius:10px;padding:9px 0;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:white;color:var(--muted)}
+.tab-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.date-form{margin-bottom:16px}
+.form-field{margin-bottom:10px}
+.form-field label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px}
+.form-field input,.form-field select{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.submit-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.date-item{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.date-icon{width:44px;height:44px;border-radius:12px;background:#EEEDF8;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.date-info{flex:1}
+.date-name{font-size:15px;font-weight:700;color:var(--navy)}
+.date-when{font-size:12px;color:var(--muted);margin-top:2px}
+.date-countdown{font-size:12px;font-weight:700;color:var(--coral);margin-top:3px}
+.date-del{color:var(--muted);font-size:18px;cursor:pointer}
+.reminder-info{background:#EEEDF8;border:1px solid rgba(31,27,86,0.18);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.5}
+.reminder-setting{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.reminder-setting .lbl{font-size:14px;font-weight:700;color:var(--navy)}
+.reminder-setting .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:46px;height:26px;border-radius:13px;background:var(--coral-tint);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--coral)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on::after{transform:translateX(20px)}
+.time-picker{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;margin-top:8px}
+.save-reminder-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
+.signout-btn{width:100%;background:white;color:var(--muted);border:1.5px solid var(--border);border-radius:12px;padding:11px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px}
+.user-email{font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+80px);left:16px;right:16px;background:var(--navy);color:white;border-radius:12px;padding:13px 16px;font-size:14px;font-weight:700;text-align:center;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--coral-tint);display:inline-block;margin-left:6px;vertical-align:middle}
+.sync-dot.synced{background:#4CAF50}
+
+/* Category chips for date ideas */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{border:1.5px solid var(--coral-tint);background:white;color:var(--muted);border-radius:20px;padding:7px 13px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip.active{background:var(--navy);border-color:var(--navy);color:white}
+
+/* 6 nav tabs — tighten up */
+.nav-btn{padding:9px 0 5px}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn span{font-size:9px}
+@media (max-width:340px){.nav-btn span{font-size:8px}}
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="splash"><div class="splash-heart">💕</div></div>
+
+<div id="auth-screen" style="display:none">
+  <div class="logo">💕</div>
+  <h1>Happy Wife</h1>
+  <p>Sign in to sync your streak across all devices</p>
+  <div class="auth-card">
+    <div class="auth-tab">
+      <button class="active" onclick="switchAuthTab('login',this)">Sign in</button>
+      <button onclick="switchAuthTab('signup',this)">Sign up</button>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signIn()">Sign in</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-err" id="login-err"></div>
+      <div class="auth-forgot" onclick="resetPassword()">Forgot password?</div>
+    </div>
+    <div id="auth-signup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signup-password" placeholder="At least 6 characters"></div>
+      <button class="auth-btn" onclick="signUp()">Create account</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-err" id="signup-err"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="app" style="display:none">
+  <div id="screen-area">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="hero-card">
+        <div class="date-label" id="heroDate"></div>
+        <h2>Your daily 2 ❤️ <span class="sync-dot" id="syncDot" title="Syncing..."></span></h2>
+        <div class="sub">Two things to make her feel loved today</div>
+        <div class="streak-pill">🔥 <span id="heroStreak">0 day streak</span></div>
+      </div>
+      <div id="habitCards"></div>
+      <button class="new-pair-btn" onclick="refreshHabits()">↺ New pair for today</button>
+    </div>
+
+    <!-- STREAK -->
+    <div class="screen" id="screen-streak">
+      <div class="page-header"><div class="eyebrow">Progress</div><h1>Your streak</h1></div>
+      <div class="big-streak"><div class="num" id="bigStreak">0</div><div class="label">days in a row 🔥</div></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="val" id="statTotal">0</div><div class="lbl">Habits completed</div></div>
+        <div class="stat-card"><div class="val" id="statBest">0</div><div class="lbl">Best streak</div></div>
+        <div class="stat-card"><div class="val" id="statDays">0</div><div class="lbl">Days using app</div></div>
+        <div class="stat-card"><div class="val" id="statDoneToday">0/2</div><div class="lbl">Done today</div></div>
+      </div>
+      <div class="section-label">Recent days</div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="screen" id="screen-notes">
+      <div class="page-header"><div class="eyebrow">Library</div><h1>Love notes</h1><div class="sub">Compliments, things you love about her, sweet nothings.</div></div>
+      <button class="random-btn" onclick="showRandom()">✨ Show me a random one</button>
+      <div class="random-result" id="randomResult"></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchNoteTab('compliments',this)">Compliments</button>
+        <button class="tab-btn" onclick="switchNoteTab('love',this)">I love that...</button>
+        <button class="tab-btn" onclick="switchNoteTab('custom',this)">Custom</button>
+      </div>
+      <div class="note-input-area">
+        <div class="input-row"><input type="text" id="noteInput" placeholder="Add a note..."><button class="add-btn" onclick="addNote()">Add</button></div>
+      </div>
+      <div id="notesList"></div>
+    </div>
+
+    <!-- DATES -->
+    <div class="screen" id="screen-dates">
+      <div class="page-header"><div class="eyebrow">Important</div><h1>Special dates</h1></div>
+      <div class="card date-form">
+        <div class="form-row">
+          <div class="form-field"><label>Event name</label><input type="text" id="dateName" placeholder="Anniversary"></div>
+          <div class="form-field"><label>Date</label><input type="date" id="dateVal"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Type</label>
+            <select id="dateType"><option value="💍">💍 Anniversary</option><option value="🎂">🎂 Birthday</option><option value="💕">💕 Special day</option><option value="🌹">🌹 Date night</option><option value="⭐">⭐ Other</option></select>
+          </div>
+          <div class="form-field"><label>Repeats yearly</label>
+            <select id="dateRepeat"><option value="1">Yes</option><option value="0">No</option></select>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="addDate()">Add date</button>
+      </div>
+      <div class="section-label">Upcoming</div>
+      <div id="datesList"></div>
+    </div>
+
+    <!-- IDEAS -->
+    <div class="screen" id="screen-ideas">
+      <div class="page-header"><div class="eyebrow">Inspiration</div><h1>Ideas</h1></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchIdeaTab('date',this)">Date night</button>
+        <button class="tab-btn" onclick="switchIdeaTab('gift',this)">Gift list</button>
+      </div>
+
+      <!-- Date night -->
+      <div id="idea-date">
+        <button class="random-btn" onclick="rollDateIdea()">🎲 Surprise me</button>
+        <div class="random-result" id="dateResult"></div>
+        <div class="section-label">Browse by type</div>
+        <div class="chip-row" id="dateChips"></div>
+        <div id="dateList"></div>
+      </div>
+
+      <!-- Gift list -->
+      <div id="idea-gift" style="display:none">
+        <div class="card">
+          <div class="form-row">
+            <div class="form-field"><label>Gift idea</label><input type="text" id="giftName" placeholder="What she'd love"></div>
+            <div class="form-field"><label>For</label>
+              <select id="giftOccasion"><option>Anniversary</option><option>Birthday</option><option>Yom Tov</option><option>Just because</option><option>Other</option></select>
+            </div>
+          </div>
+          <div class="form-field"><label>Note (optional)</label><input type="text" id="giftNote" placeholder="Size, color, where she saw it..."></div>
+          <button class="submit-btn" onclick="addGift()">Add to list</button>
+        </div>
+        <div class="section-label">Need inspiration?</div>
+        <button class="random-btn" onclick="rollGiftPrompt()">💡 Give me a prompt</button>
+        <div class="random-result" id="giftResult"></div>
+        <div class="section-label">Your list</div>
+        <div id="giftList"></div>
+      </div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div class="screen" id="screen-reminders">
+      <div class="page-header"><div class="eyebrow">Settings</div><h1>Reminders</h1></div>
+      <div class="reminder-info">ℹ️ Reminders use your browser's notification system. Tap "Save" and allow notifications when prompted.</div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Morning reminder</div><div class="sub">Start your day with your 2 habits</div><input type="time" class="time-picker" id="morningTime" value="08:00"></div>
+        <button class="toggle" id="toggleMorning" onclick="toggleReminder('morning')"></button>
+      </div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Evening check-in</div><div class="sub">Remind you if habits aren't done yet</div><input type="time" class="time-picker" id="eveningTime" value="20:00"></div>
+        <button class="toggle" id="toggleEvening" onclick="toggleReminder('evening')"></button>
+      </div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Anniversary alerts</div><div class="sub">1 week before special dates</div></div>
+        <button class="toggle" id="toggleDates" onclick="toggleReminder('dates')"></button>
+      </div>
+      <button class="save-reminder-btn" onclick="saveReminders()">Save reminder settings</button>
+
+      <div class="section-label">Your own habits</div>
+      <div class="reminder-info">Add habits that fit your marriage. They mix into the daily rotation alongside the built-in ones.</div>
+      <div class="card">
+        <div class="form-field"><label>Habit</label><input type="text" id="chTitle" placeholder="e.g. Call her on your lunch break"></div>
+        <div class="form-field"><label>Details</label><input type="text" id="chDesc" placeholder="What it actually looks like"></div>
+        <div class="form-field"><label>How long</label><input type="text" id="chTime" placeholder="e.g. ~5 min"></div>
+        <button class="submit-btn" onclick="addCustomHabit()">Add habit</button>
+      </div>
+      <div id="customHabitList"></div>
+      <div class="user-email" id="userEmail"></div>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+
+  </div>
+
+  <nav id="nav">
+    <button class="nav-btn active" onclick="goTo('home',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>Today</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('streak',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Streak</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('notes',this)">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Notes</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('ideas',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg><span>Ideas</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('dates',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Dates</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('reminders',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Settings</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ujpwrinutaweqcxgjvvr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqcHdyaW51dGF3ZXFjeGdqdnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTQ5NTIsImV4cCI6MjEwNjUzMDk1Mn0.bGyogL1nmt7Qi553gPkCZ3CBXNT6gujAdpa85G2xoEc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,          // keep session in localStorage
+    autoRefreshToken: true,        // refresh before it expires
+    detectSessionInUrl: true,      // pick up the token after Google redirect
+    storage: window.localStorage,
+    storageKey: 'happywife-auth',
+    flowType: 'pkce'
+  }
+});
+
+const builtinHabits = [
+  {title:"Morning hug or kiss",desc:"Before phones, before rushing out. Ten seconds.",time:"Morning · ~10 sec"},
+  {title:"Say 'I love you' unprompted",desc:"No occasion. Just because.",time:"Anytime"},
+  {title:"Send a sweet text",desc:"One genuine line during the day.",time:"Midday · ~1 min"},
+  {title:"A specific compliment",desc:"Name exactly what caught your eye — not just 'you look nice.'",time:"Anytime · 30 sec"},
+  {title:"Make her coffee or tea",desc:"The way she likes it, without being asked.",time:"Morning · ~3 min"},
+  {title:"Take a task off her plate",desc:"Do something she usually handles. Just handle it.",time:"Varies"},
+  {title:"Leave a kind note",desc:"Sticky note, a text, anything she'll find later.",time:"~2 min"},
+  {title:"Ask about her day and really listen",desc:"Phone down. Follow up on something from yesterday.",time:"Evening · ~10 min"},
+  {title:"Phone down for 30 minutes",desc:"Fully present. No screens, no half-listening.",time:"Evening · 30 min"},
+  {title:"Pick up her favorite snack",desc:"Remember what she likes. Show up with it.",time:"~2 min"},
+  {title:"Thank her for something specific",desc:"Name what she did and why it mattered.",time:"~1 min"},
+  {title:"Watch her show with her",desc:"No commentary. Just enjoy it together.",time:"Evening · ~30 min"},
+  {title:"Share something funny",desc:"A meme, clip, or story that made you think of her.",time:"Anytime · 1 min"},
+  {title:"Short walk together",desc:"Even 10 minutes around the block.",time:"~10–20 min"},
+  {title:"Notice when she's tired",desc:"Offer rest, or take over something without being asked.",time:"Anytime"},
+  {title:"Refill her water bottle",desc:"Small, consistent, thoughtful.",time:"30 sec"},
+  {title:"Ask her opinion on something real",desc:"Something that actually matters to you.",time:"~5 min"},
+  {title:"Acknowledge something she handled well",desc:"Point it out. She may not know you noticed.",time:"~1 min"},
+  {title:"Bring her one flower",desc:"Not a bouquet — just one. From the store or the yard.",time:"~2 min"},
+  {title:"Tell her what you admire about her",desc:"A character trait, not just how she looks.",time:"~2 min"},
+];
+const dateIdeas = {
+  out: [
+    "Try a kosher restaurant neither of you has been to",
+    "Walk somewhere scenic right before sunset",
+    "Botanical garden or arboretum",
+    "Drive to a lookout point with coffee and sit in the car talking",
+    "Visit a museum — pick one neither of you knows anything about",
+    "Browse a bookstore, each pick a book for the other",
+    "Hike a local trail you've never done",
+    "Picnic with food you packed together",
+    "Mini golf",
+    "Bowling",
+    "Farmers market on a Sunday morning",
+    "Apple or berry picking in season",
+    "Drive to a nearby town you've never explored",
+    "Kosher bakery crawl — try three in one afternoon",
+    "Ice cream and a long walk",
+    "Aquarium or zoo",
+    "Pottery painting place",
+    "Scenic drive with a good playlist and no destination"
+  ],
+  home: [
+    "Cook a new recipe together, start to finish",
+    "Order in from somewhere new, eat by candlelight after the kids sleep",
+    "Learn something together — a sefer, the parsha, a book you both pick",
+    "Go through old photos from before the kids",
+    "Plan a trip together, even if it's hypothetical",
+    "Board game or cards, winner picks next week's date",
+    "Make a playlist of songs from when you first met",
+    "Breakfast for dinner",
+    "Build a puzzle over a few nights",
+    "Write each other a letter, read them out loud",
+    "Dessert night — make something you'd never normally attempt",
+    "Stargaze from the backyard or roof",
+    "Give each other a 20-minute massage, no phones",
+    "Ask each other questions you've never asked before",
+    "Rearrange a room together just for fun"
+  ],
+  shabbos: [
+    "Shabbos afternoon walk, just the two of you",
+    "Melave Malka for two — no guests",
+    "One Shabbos with no guests at all, just your family",
+    "Learn together Shabbos afternoon",
+    "Shabbos nap together instead of separately",
+    "Seudah shlishis somewhere different in the house",
+    "Sing zemiros together, even if you're not singers",
+    "Friday afternoon: bake challah together"
+  ],
+  special: [
+    "Shabbos away at a hotel or B&B",
+    "Book a nice kosher restaurant for an anniversary",
+    "Weekend getaway, no kids",
+    "Surprise her with a professional photoshoot",
+    "Private kosher cooking class",
+    "One night at a nice hotel",
+    "Spa day — book it for her, handle everything at home",
+    "Hot air balloon ride",
+    "Take her to where you got engaged"
+  ],
+  budget: [
+    "Coffee and a long walk",
+    "Library date — read next to each other",
+    "Window shopping and dreaming out loud",
+    "Free museum day",
+    "Sunset from the top of a parking garage",
+    "Homemade pizza night",
+    "Drive around a nice neighborhood looking at houses",
+    "Public garden or park you've never been to",
+    "Build a fort in the living room",
+    "Make hot drinks and sit outside in the cold"
+  ]
+};
+const dateCategoryLabels = {out:"Out & about",home:"At home",shabbos:"Shabbos & Yom Tov",special:"Special occasion",budget:"Budget-friendly"};
+
+const giftPrompts = [
+  "Something she mentioned wanting months ago",
+  "An upgrade of something she uses every single day",
+  "A gift certificate to her favorite store",
+  "Something that saves her time",
+  "Jewelry — but ask her sister or friend first",
+  "A sheitel or sheitel service",
+  "Something for her hobby, not yours",
+  "A nice sefer or book she'd actually read",
+  "A weekend away — the gift is the plan, not an object",
+  "Something handmade by the kids with your help",
+  "A subscription to something she loves",
+  "Her favorite flowers, but on a random Tuesday"
+];
+
+const defaultNotes = {
+  compliments:["Your smile lights up every room you walk into","You're the most beautiful woman I've ever seen","You have the most incredible laugh","You make everything more beautiful just by being there"],
+  love:["I love the way you laugh at your own jokes","I love how much you care about the people around you","I love watching you light up when you talk about something you're passionate about","I love how kind you are, even when no one's watching"],
+  custom:[]
+};
+
+let currentUser = null;
+let state = {
+  today: new Date().toDateString(),
+  todayPair: null, todayDate: null,
+  done: [false,false], usedHabits: [],
+  streak: 0, bestStreak: 0, lastStreakDay: '',
+  totalDone: 0, daysUsed: 0, history: [],
+  notes: JSON.parse(JSON.stringify(defaultNotes)),
+  dates: [],
+  customHabits: [],
+  gifts: [],
+  reminders: {morning:false,evening:false,dates:false,morningTime:'08:00',eveningTime:'20:00'}
+};
+let syncTimer = null;
+let currentNoteTab = 'compliments';
+
+// ── Auth ─────────────────────────────────────────────────────
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('auth-login').style.display = tab==='login'?'':'none';
+  document.getElementById('auth-signup').style.display = tab==='signup'?'':'none';
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signInWithPassword({email, password:pass});
+  if(error) err.textContent = error.message;
+}
+
+async function signUp() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  const err = document.getElementById('signup-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signUp({email, password:pass});
+  if(error) err.textContent = error.message;
+  else err.style.color='green', err.textContent = 'Check your email to confirm your account!';
+}
+
+async function signInGoogle() {
+  const {error} = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error) { document.getElementById('login-err').textContent = error.message; }
+}
+
+async function resetPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if(!email){document.getElementById('login-err').textContent='Enter your email first';return;}
+  await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  document.getElementById('login-err').style.color='green';
+  document.getElementById('login-err').textContent='Password reset email sent!';
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ── Supabase sync ─────────────────────────────────────────────
+async function loadFromCloud() {
+  if(!currentUser) return;
+  setSyncDot(false);
+  const {data,error} = await sb.from('user_data').select('*').eq('user_id',currentUser.id).single();
+  if(error && error.code !== 'PGRST116') { console.error(error); setSyncDot(true); return; }
+  if(data) {
+    state.streak = data.streak||0;
+    state.bestStreak = data.best_streak||0;
+    state.lastStreakDay = data.last_streak_day||'';
+    state.totalDone = data.total_done||0;
+    state.daysUsed = data.days_used||0;
+    state.history = data.history||[];
+    state.notes = data.notes||JSON.parse(JSON.stringify(defaultNotes));
+    state.customHabits = state.notes._customHabits || [];
+    state.gifts = state.notes._gifts || [];
+    delete state.notes._customHabits; delete state.notes._gifts;
+    if(!state.notes.compliments) state.notes.compliments=[];
+    if(!state.notes.love) state.notes.love=[];
+    if(!state.notes.custom) state.notes.custom=[];
+    state.dates = data.dates||[];
+    state.reminders = data.reminders||state.reminders;
+    state.todayPair = data.today_pair||null;
+    state.todayDate = data.today_date||null;
+    state.done = data.done||[false,false];
+    state.usedHabits = data.used_habits||[];
+  }
+  setSyncDot(true);
+}
+
+async function saveToCloud() {
+  if(!currentUser) return;
+  setSyncDot(false);
+  const payload = {
+    user_id: currentUser.id,
+    streak: state.streak, best_streak: state.bestStreak,
+    last_streak_day: state.lastStreakDay, total_done: state.totalDone,
+    days_used: state.daysUsed, history: state.history,
+    notes: {...state.notes, _customHabits: state.customHabits, _gifts: state.gifts},
+    dates: state.dates, reminders: state.reminders,
+    today_pair: state.todayPair, today_date: state.todayDate,
+    done: state.done, used_habits: state.usedHabits,
+    updated_at: new Date().toISOString()
+  };
+  await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+  setSyncDot(true);
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveToCloud, 1500);
+}
+
+function setSyncDot(synced) {
+  const d = document.getElementById('syncDot');
+  if(d) d.className = 'sync-dot'+(synced?' synced':'');
+}
+
+// ── Init ─────────────────────────────────────────────────────
+async function initApp(user) {
+  currentUser = user;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('userEmail').textContent = user.email;
+
+  await loadFromCloud();
+
+  if(state.todayDate !== state.today) {
+    state.done=[false,false]; state.todayDate=state.today;
+    state.todayPair=null; state.daysUsed++;
+  }
+  if(!state.todayPair) pickPair();
+
+  renderAll();
+}
+
+function renderAll() {
+  renderHome(); renderStreak(); renderNotes(); renderDates(); renderReminders();
+  renderCustomHabits(); renderDateIdeas(); renderGifts();
+}
+
+// ── Habits ────────────────────────────────────────────────────
+// All habits = built-ins (b0..bN) + user's custom ones (stable ids)
+function allHabits() {
+  const built = builtinHabits.map((hb,i)=>({id:'b'+i, ...hb, custom:false}));
+  const custom = state.customHabits.map(hb=>({...hb, custom:true}));
+  return [...built, ...custom];
+}
+function habitById(id) {
+  if(typeof id === 'number') id = 'b'+id;        // legacy saves
+  return allHabits().find(h=>h.id===id) || null;
+}
+
+function pickPair() {
+  const all = allHabits();
+  const usedIds = state.usedHabits.map(u=>typeof u==='number'?'b'+u:u);
+  let avail = all.filter(h=>!usedIds.includes(h.id));
+  if(avail.length<2){ state.usedHabits=[]; avail=all; }
+  const shuffled = [...avail].sort(()=>Math.random()-0.5);
+  state.todayPair = shuffled.slice(0,2).map(h=>h.id);
+  state.usedHabits = [...usedIds,...state.todayPair].slice(-14);
+}
+
+function refreshHabits() {
+  state.done=[false,false]; pickPair(); renderHome(); renderStreak();
+  scheduleSave(); showToast("New habits picked ✓");
+}
+
+function toggleDone(idx) {
+  state.done[idx]=!state.done[idx];
+  if(state.done[idx]) state.totalDone++; else if(state.totalDone>0) state.totalDone--;
+  if(state.done[0]&&state.done[1]) { updateStreak(); showToast("Both done! She's lucky to have you 💕"); }
+  renderHome(); renderStreak(); scheduleSave();
+}
+
+function updateStreak() {
+  if(state.lastStreakDay===state.today) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  state.streak = state.lastStreakDay===yesterday.toDateString() ? state.streak+1 : 1;
+  state.bestStreak = Math.max(state.bestStreak, state.streak);
+  state.lastStreakDay = state.today;
+  state.history = [{date:state.today,done:true},...state.history].slice(0,30);
+}
+
+function renderHome() {
+  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('heroStreak').textContent = state.streak+(state.streak===1?' day streak':' day streak');
+  const container = document.getElementById('habitCards');
+  container.innerHTML='';
+  if(!state.todayPair) return;
+  state.todayPair.forEach((hi,idx)=>{
+    const h=habitById(hi); if(!h) return;
+    const done=state.done[idx];
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="habit-item"><div class="habit-check ${done?'checked':''}" onclick="toggleDone(${idx})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="habit-text"><div class="habit-title ${done?'done':''}">${h.title}</div><div class="habit-desc">${h.desc}</div><div class="habit-time">${h.time}</div></div></div>`;
+    container.appendChild(card);
+  });
+}
+
+// ── Streak ────────────────────────────────────────────────────
+function renderStreak() {
+  document.getElementById('bigStreak').textContent=state.streak;
+  document.getElementById('statTotal').textContent=state.totalDone;
+  document.getElementById('statBest').textContent=state.bestStreak;
+  document.getElementById('statDays').textContent=state.daysUsed;
+  document.getElementById('statDoneToday').textContent=state.done.filter(Boolean).length+'/2';
+  const list=document.getElementById('historyList');
+  if(!state.history.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:20px">No history yet — complete both habits today!</div>';return;}
+  list.innerHTML=state.history.slice(0,7).map(h=>`<div class="card card-sm" style="display:flex;align-items:center;gap:12px"><span style="font-size:18px">${h.done?'✅':'⬜'}</span><span style="font-size:14px;color:var(--navy)">${new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:${h.done?'var(--coral)':'var(--muted)'}">${h.done?'Complete':'Missed'}</span></div>`).join('');
+}
+
+// ── Notes ─────────────────────────────────────────────────────
+function switchNoteTab(tab,btn) {
+  currentNoteTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('noteInput').placeholder=tab==='compliments'?'Add a compliment...':tab==='love'?'I love that you...':'Add a custom note...';
+  renderNotes();
+}
+function addNote() {
+  const input=document.getElementById('noteInput');
+  const text=input.value.trim();
+  if(!text){showToast("Type something first");return;}
+  state.notes[currentNoteTab]=[text,...state.notes[currentNoteTab]];
+  input.value=''; renderNotes(); scheduleSave(); showToast("Note saved ❤️");
+}
+function deleteNote(tab,idx){state.notes[tab].splice(idx,1);renderNotes();scheduleSave();}
+function showRandom(){
+  const all=[...state.notes.compliments,...state.notes.love,...state.notes.custom];
+  if(!all.length){showToast("Add some notes first!");return;}
+  const r=all[Math.floor(Math.random()*all.length)];
+  const el=document.getElementById('randomResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function renderNotes(){
+  const list=document.getElementById('notesList');
+  const notes=state.notes[currentNoteTab];
+  const label=currentNoteTab==='compliments'?'Compliment':currentNoteTab==='love'?'I love that...':'Note';
+  if(!notes.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No notes yet — add one above!</div>';return;}
+  list.innerHTML=notes.map((n,i)=>`<div class="note-card"><div class="note-body"><div class="note-tag">${label}</div><div class="note-text">${n}</div></div><span class="note-del" onclick="deleteNote('${currentNoteTab}',${i})">×</span></div>`).join('');
+}
+
+// ── Dates ─────────────────────────────────────────────────────
+function addDate(){
+  const name=document.getElementById('dateName').value.trim();
+  const val=document.getElementById('dateVal').value;
+  const type=document.getElementById('dateType').value;
+  const repeat=document.getElementById('dateRepeat').value==='1';
+  if(!name||!val){showToast("Fill in name and date");return;}
+  state.dates.push({name,val,type,repeat});
+  document.getElementById('dateName').value='';
+  document.getElementById('dateVal').value='';
+  renderDates(); scheduleSave(); showToast("Date saved 📅");
+}
+function deleteDate(idx){state.dates.splice(idx,1);renderDates();scheduleSave();}
+function daysUntil(dateStr,repeat){
+  const now=new Date();now.setHours(0,0,0,0);
+  let d=new Date(dateStr+'T00:00:00');
+  if(repeat){d.setFullYear(now.getFullYear());if(d<now)d.setFullYear(now.getFullYear()+1);}
+  const diff=Math.round((d-now)/86400000);
+  if(diff===0)return'🎉 Today!';if(diff===1)return'Tomorrow';if(diff<0)return repeat?'':'Passed';
+  return'In '+diff+' days';
+}
+function renderDates(){
+  const list=document.getElementById('datesList');
+  if(!state.dates.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No dates saved yet</div>';return;}
+  const sorted=[...state.dates].map((d,i)=>({...d,i})).sort((a,b)=>{
+    const now=new Date();now.setHours(0,0,0,0);
+    const da=new Date(a.val+'T00:00:00'),db=new Date(b.val+'T00:00:00');
+    if(a.repeat){da.setFullYear(now.getFullYear());if(da<now)da.setFullYear(now.getFullYear()+1);}
+    if(b.repeat){db.setFullYear(now.getFullYear());if(db<now)db.setFullYear(now.getFullYear()+1);}
+    return da-db;
+  });
+  list.innerHTML=sorted.map(d=>{
+    const disp=new Date(d.val+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:d.repeat?undefined:'numeric'});
+    const cnt=daysUntil(d.val,d.repeat);
+    return`<div class="date-item"><div class="date-icon">${d.type}</div><div class="date-info"><div class="date-name">${d.name}</div><div class="date-when">${disp}${d.repeat?' · every year':''}</div>${cnt?`<div class="date-countdown">${cnt}</div>`:''}</div><span class="date-del" onclick="deleteDate(${d.i})">×</span></div>`;
+  }).join('');
+}
+
+// ── Reminders ─────────────────────────────────────────────────
+function toggleReminder(key){state.reminders[key]=!state.reminders[key];renderReminders();}
+function renderReminders(){
+  ['morning','evening','dates'].forEach(k=>{
+    const btn=document.getElementById('toggle'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(btn)btn.className='toggle'+(state.reminders[k]?' on':'');
+  });
+  document.getElementById('morningTime').value=state.reminders.morningTime||'08:00';
+  document.getElementById('eveningTime').value=state.reminders.eveningTime||'20:00';
+}
+async function saveReminders(){
+  state.reminders.morningTime=document.getElementById('morningTime').value;
+  state.reminders.eveningTime=document.getElementById('eveningTime').value;
+  await saveToCloud(); showToast("Settings saved ✓");
+}
+
+// ── Custom habits ─────────────────────────────────────────────
+function addCustomHabit(){
+  const t=document.getElementById('chTitle').value.trim();
+  const d=document.getElementById('chDesc').value.trim();
+  const tm=document.getElementById('chTime').value.trim();
+  if(!t){showToast("Give the habit a name");return;}
+  state.customHabits.push({id:'c'+Date.now(),title:t,desc:d||'Your own habit.',time:tm||'Anytime'});
+  document.getElementById('chTitle').value='';
+  document.getElementById('chDesc').value='';
+  document.getElementById('chTime').value='';
+  renderCustomHabits(); scheduleSave(); showToast("Habit added ✓");
+}
+function deleteCustomHabit(id){
+  state.customHabits=state.customHabits.filter(h=>h.id!==id);
+  state.usedHabits=state.usedHabits.filter(u=>u!==id);
+  if(state.todayPair && state.todayPair.includes(id)){ state.done=[false,false]; pickPair(); renderHome(); }
+  renderCustomHabits(); scheduleSave();
+}
+function renderCustomHabits(){
+  const el=document.getElementById('customHabitList'); if(!el) return;
+  if(!state.customHabits.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px">No custom habits yet</div>';return;}
+  el.innerHTML=state.customHabits.map(hb=>`<div class="note-card"><div class="note-body"><div class="note-tag">Your habit</div><div class="note-text" style="font-weight:600">${esc(hb.title)}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(hb.desc)} · ${esc(hb.time)}</div></div><span class="note-del" onclick="deleteCustomHabit('${hb.id}')">×</span></div>`).join('');
+}
+
+// ── Ideas: date night ─────────────────────────────────────────
+let currentIdeaTab='date', currentDateCat='out';
+function switchIdeaTab(tab,btn){
+  currentIdeaTab=tab;
+  document.querySelectorAll('#screen-ideas .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('idea-date').style.display = tab==='date'?'':'none';
+  document.getElementById('idea-gift').style.display = tab==='gift'?'':'none';
+}
+function rollDateIdea(){
+  const all=Object.values(dateIdeas).flat();
+  const r=all[Math.floor(Math.random()*all.length)];
+  const el=document.getElementById('dateResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function setDateCat(cat){
+  currentDateCat=cat; renderDateIdeas();
+}
+function renderDateIdeas(){
+  const chips=document.getElementById('dateChips'); if(!chips) return;
+  chips.innerHTML=Object.keys(dateIdeas).map(k=>`<button class="chip ${k===currentDateCat?'active':''}" onclick="setDateCat('${k}')">${dateCategoryLabels[k]}</button>`).join('');
+  document.getElementById('dateList').innerHTML=dateIdeas[currentDateCat].map(idea=>`<div class="card card-sm" style="font-size:14px;line-height:1.5;color:var(--navy)">${esc(idea)}</div>`).join('');
+}
+
+// ── Ideas: gift list ──────────────────────────────────────────
+function addGift(){
+  const n=document.getElementById('giftName').value.trim();
+  const o=document.getElementById('giftOccasion').value;
+  const note=document.getElementById('giftNote').value.trim();
+  if(!n){showToast("What's the gift idea?");return;}
+  state.gifts.unshift({id:'g'+Date.now(),name:n,occasion:o,note:note,got:false});
+  document.getElementById('giftName').value='';
+  document.getElementById('giftNote').value='';
+  renderGifts(); scheduleSave(); showToast("Added to your list 🎁");
+}
+function toggleGift(id){
+  const g=state.gifts.find(x=>x.id===id); if(g) g.got=!g.got;
+  renderGifts(); scheduleSave();
+}
+function deleteGift(id){
+  state.gifts=state.gifts.filter(g=>g.id!==id); renderGifts(); scheduleSave();
+}
+function rollGiftPrompt(){
+  const r=giftPrompts[Math.floor(Math.random()*giftPrompts.length)];
+  const el=document.getElementById('giftResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function renderGifts(){
+  const el=document.getElementById('giftList'); if(!el) return;
+  if(!state.gifts.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px">Nothing on your list yet — add things as she mentions them</div>';return;}
+  el.innerHTML=state.gifts.map(g=>`<div class="note-card"><div class="habit-check ${g.got?'checked':''}" style="margin-top:2px" onclick="toggleGift('${g.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="note-body"><div class="note-tag">${esc(g.occasion)}</div><div class="note-text" style="${g.got?'text-decoration:line-through;opacity:0.5':''}">${esc(g.name)}</div>${g.note?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(g.note)}</div>`:''}</div><span class="note-del" onclick="deleteGift('${g.id}')">×</span></div>`).join('');
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ── Nav & utils ───────────────────────────────────────────────
+function goTo(screen,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('screen-area').scrollTop=0;
+}
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+let booted = false;
+
+function showAuthScreen(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// Restore an existing session on load BEFORE deciding what to show
+async function boot(){
+  try{
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user){ booted=true; await initApp(session.user); }
+    else { showAuthScreen(); }
+  }catch(e){ console.error(e); showAuthScreen(); }
+}
+
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='INITIAL_SESSION') return;              // boot() handles this
+  if(event==='TOKEN_REFRESHED') return;              // nothing to redraw
+  if(session?.user){
+    if(!booted || currentUser?.id !== session.user.id){
+      booted=true; await initApp(session.user);
+    }
+  } else if(event==='SIGNED_OUT'){
+    booted=false; currentUser=null; showAuthScreen();
+  }
+});
+
+// Re-check the session when the app comes back to the foreground
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && currentUser) sb.auth.getSession();
+});
+
+boot();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
