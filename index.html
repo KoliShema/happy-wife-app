@@ -23,6 +23,10 @@
 html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppins',sans-serif;color:var(--navy)}
 
 /* Auth screen */
+#splash{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000}
+.splash-heart{font-size:54px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}
+
 #auth-screen{
   position:fixed;inset:0;background:var(--navy);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -140,12 +144,25 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 .toast.show{opacity:1}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--coral-tint);display:inline-block;margin-left:6px;vertical-align:middle}
 .sync-dot.synced{background:#4CAF50}
+
+/* Category chips for date ideas */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{border:1.5px solid var(--coral-tint);background:white;color:var(--muted);border-radius:20px;padding:7px 13px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip.active{background:var(--navy);border-color:var(--navy);color:white}
+
+/* 6 nav tabs — tighten up */
+.nav-btn{padding:9px 0 5px}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn span{font-size:9px}
+@media (max-width:340px){.nav-btn span{font-size:8px}}
 </style>
 </head>
 <body>
 
 <!-- Auth Screen -->
-<div id="auth-screen">
+<div id="splash"><div class="splash-heart">💕</div></div>
+
+<div id="auth-screen" style="display:none">
   <div class="logo">💕</div>
   <h1>Happy Wife</h1>
   <p>Sign in to sync your streak across all devices</p>
@@ -249,6 +266,43 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
       <div id="datesList"></div>
     </div>
 
+    <!-- IDEAS -->
+    <div class="screen" id="screen-ideas">
+      <div class="page-header"><div class="eyebrow">Inspiration</div><h1>Ideas</h1></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchIdeaTab('date',this)">Date night</button>
+        <button class="tab-btn" onclick="switchIdeaTab('gift',this)">Gift list</button>
+      </div>
+
+      <!-- Date night -->
+      <div id="idea-date">
+        <button class="random-btn" onclick="rollDateIdea()">🎲 Surprise me</button>
+        <div class="random-result" id="dateResult"></div>
+        <div class="section-label">Browse by type</div>
+        <div class="chip-row" id="dateChips"></div>
+        <div id="dateList"></div>
+      </div>
+
+      <!-- Gift list -->
+      <div id="idea-gift" style="display:none">
+        <div class="card">
+          <div class="form-row">
+            <div class="form-field"><label>Gift idea</label><input type="text" id="giftName" placeholder="What she'd love"></div>
+            <div class="form-field"><label>For</label>
+              <select id="giftOccasion"><option>Anniversary</option><option>Birthday</option><option>Yom Tov</option><option>Just because</option><option>Other</option></select>
+            </div>
+          </div>
+          <div class="form-field"><label>Note (optional)</label><input type="text" id="giftNote" placeholder="Size, color, where she saw it..."></div>
+          <button class="submit-btn" onclick="addGift()">Add to list</button>
+        </div>
+        <div class="section-label">Need inspiration?</div>
+        <button class="random-btn" onclick="rollGiftPrompt()">💡 Give me a prompt</button>
+        <div class="random-result" id="giftResult"></div>
+        <div class="section-label">Your list</div>
+        <div id="giftList"></div>
+      </div>
+    </div>
+
     <!-- REMINDERS -->
     <div class="screen" id="screen-reminders">
       <div class="page-header"><div class="eyebrow">Settings</div><h1>Reminders</h1></div>
@@ -266,6 +320,16 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
         <button class="toggle" id="toggleDates" onclick="toggleReminder('dates')"></button>
       </div>
       <button class="save-reminder-btn" onclick="saveReminders()">Save reminder settings</button>
+
+      <div class="section-label">Your own habits</div>
+      <div class="reminder-info">Add habits that fit your marriage. They mix into the daily rotation alongside the built-in ones.</div>
+      <div class="card">
+        <div class="form-field"><label>Habit</label><input type="text" id="chTitle" placeholder="e.g. Call her on your lunch break"></div>
+        <div class="form-field"><label>Details</label><input type="text" id="chDesc" placeholder="What it actually looks like"></div>
+        <div class="form-field"><label>How long</label><input type="text" id="chTime" placeholder="e.g. ~5 min"></div>
+        <button class="submit-btn" onclick="addCustomHabit()">Add habit</button>
+      </div>
+      <div id="customHabitList"></div>
       <div class="user-email" id="userEmail"></div>
       <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
@@ -282,6 +346,9 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
     <button class="nav-btn" onclick="goTo('notes',this)">
       <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Notes</span>
     </button>
+    <button class="nav-btn" onclick="goTo('ideas',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg><span>Ideas</span>
+    </button>
     <button class="nav-btn" onclick="goTo('dates',this)">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Dates</span>
     </button>
@@ -294,9 +361,18 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 <script>
 const SUPABASE_URL = 'https://ujpwrinutaweqcxgjvvr.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqcHdyaW51dGF3ZXFjeGdqdnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTQ5NTIsImV4cCI6MjEwNjUzMDk1Mn0.bGyogL1nmt7Qi553gPkCZ3CBXNT6gujAdpa85G2xoEc';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,          // keep session in localStorage
+    autoRefreshToken: true,        // refresh before it expires
+    detectSessionInUrl: true,      // pick up the token after Google redirect
+    storage: window.localStorage,
+    storageKey: 'happywife-auth',
+    flowType: 'pkce'
+  }
+});
 
-const habits = [
+const builtinHabits = [
   {title:"Morning hug or kiss",desc:"Before phones, before rushing out. Ten seconds.",time:"Morning · ~10 sec"},
   {title:"Say 'I love you' unprompted",desc:"No occasion. Just because.",time:"Anytime"},
   {title:"Send a sweet text",desc:"One genuine line during the day.",time:"Midday · ~1 min"},
@@ -318,6 +394,95 @@ const habits = [
   {title:"Bring her one flower",desc:"Not a bouquet — just one. From the store or the yard.",time:"~2 min"},
   {title:"Tell her what you admire about her",desc:"A character trait, not just how she looks.",time:"~2 min"},
 ];
+const dateIdeas = {
+  out: [
+    "Try a kosher restaurant neither of you has been to",
+    "Walk somewhere scenic right before sunset",
+    "Botanical garden or arboretum",
+    "Drive to a lookout point with coffee and sit in the car talking",
+    "Visit a museum — pick one neither of you knows anything about",
+    "Browse a bookstore, each pick a book for the other",
+    "Hike a local trail you've never done",
+    "Picnic with food you packed together",
+    "Mini golf",
+    "Bowling",
+    "Farmers market on a Sunday morning",
+    "Apple or berry picking in season",
+    "Drive to a nearby town you've never explored",
+    "Kosher bakery crawl — try three in one afternoon",
+    "Ice cream and a long walk",
+    "Aquarium or zoo",
+    "Pottery painting place",
+    "Scenic drive with a good playlist and no destination"
+  ],
+  home: [
+    "Cook a new recipe together, start to finish",
+    "Order in from somewhere new, eat by candlelight after the kids sleep",
+    "Learn something together — a sefer, the parsha, a book you both pick",
+    "Go through old photos from before the kids",
+    "Plan a trip together, even if it's hypothetical",
+    "Board game or cards, winner picks next week's date",
+    "Make a playlist of songs from when you first met",
+    "Breakfast for dinner",
+    "Build a puzzle over a few nights",
+    "Write each other a letter, read them out loud",
+    "Dessert night — make something you'd never normally attempt",
+    "Stargaze from the backyard or roof",
+    "Give each other a 20-minute massage, no phones",
+    "Ask each other questions you've never asked before",
+    "Rearrange a room together just for fun"
+  ],
+  shabbos: [
+    "Shabbos afternoon walk, just the two of you",
+    "Melave Malka for two — no guests",
+    "One Shabbos with no guests at all, just your family",
+    "Learn together Shabbos afternoon",
+    "Shabbos nap together instead of separately",
+    "Seudah shlishis somewhere different in the house",
+    "Sing zemiros together, even if you're not singers",
+    "Friday afternoon: bake challah together"
+  ],
+  special: [
+    "Shabbos away at a hotel or B&B",
+    "Book a nice kosher restaurant for an anniversary",
+    "Weekend getaway, no kids",
+    "Surprise her with a professional photoshoot",
+    "Private kosher cooking class",
+    "One night at a nice hotel",
+    "Spa day — book it for her, handle everything at home",
+    "Hot air balloon ride",
+    "Take her to where you got engaged"
+  ],
+  budget: [
+    "Coffee and a long walk",
+    "Library date — read next to each other",
+    "Window shopping and dreaming out loud",
+    "Free museum day",
+    "Sunset from the top of a parking garage",
+    "Homemade pizza night",
+    "Drive around a nice neighborhood looking at houses",
+    "Public garden or park you've never been to",
+    "Build a fort in the living room",
+    "Make hot drinks and sit outside in the cold"
+  ]
+};
+const dateCategoryLabels = {out:"Out & about",home:"At home",shabbos:"Shabbos & Yom Tov",special:"Special occasion",budget:"Budget-friendly"};
+
+const giftPrompts = [
+  "Something she mentioned wanting months ago",
+  "An upgrade of something she uses every single day",
+  "A gift certificate to her favorite store",
+  "Something that saves her time",
+  "Jewelry — but ask her sister or friend first",
+  "A sheitel or sheitel service",
+  "Something for her hobby, not yours",
+  "A nice sefer or book she'd actually read",
+  "A weekend away — the gift is the plan, not an object",
+  "Something handmade by the kids with your help",
+  "A subscription to something she loves",
+  "Her favorite flowers, but on a random Tuesday"
+];
+
 const defaultNotes = {
   compliments:["Your smile lights up every room you walk into","You're the most beautiful woman I've ever seen","You have the most incredible laugh","You make everything more beautiful just by being there"],
   love:["I love the way you laugh at your own jokes","I love how much you care about the people around you","I love watching you light up when you talk about something you're passionate about","I love how kind you are, even when no one's watching"],
@@ -333,6 +498,8 @@ let state = {
   totalDone: 0, daysUsed: 0, history: [],
   notes: JSON.parse(JSON.stringify(defaultNotes)),
   dates: [],
+  customHabits: [],
+  gifts: [],
   reminders: {morning:false,evening:false,dates:false,morningTime:'08:00',eveningTime:'20:00'}
 };
 let syncTimer = null;
@@ -403,6 +570,12 @@ async function loadFromCloud() {
     state.daysUsed = data.days_used||0;
     state.history = data.history||[];
     state.notes = data.notes||JSON.parse(JSON.stringify(defaultNotes));
+    state.customHabits = state.notes._customHabits || [];
+    state.gifts = state.notes._gifts || [];
+    delete state.notes._customHabits; delete state.notes._gifts;
+    if(!state.notes.compliments) state.notes.compliments=[];
+    if(!state.notes.love) state.notes.love=[];
+    if(!state.notes.custom) state.notes.custom=[];
     state.dates = data.dates||[];
     state.reminders = data.reminders||state.reminders;
     state.todayPair = data.today_pair||null;
@@ -421,7 +594,8 @@ async function saveToCloud() {
     streak: state.streak, best_streak: state.bestStreak,
     last_streak_day: state.lastStreakDay, total_done: state.totalDone,
     days_used: state.daysUsed, history: state.history,
-    notes: state.notes, dates: state.dates, reminders: state.reminders,
+    notes: {...state.notes, _customHabits: state.customHabits, _gifts: state.gifts},
+    dates: state.dates, reminders: state.reminders,
     today_pair: state.todayPair, today_date: state.todayDate,
     done: state.done, used_habits: state.usedHabits,
     updated_at: new Date().toISOString()
@@ -443,6 +617,7 @@ function setSyncDot(synced) {
 // ── Init ─────────────────────────────────────────────────────
 async function initApp(user) {
   currentUser = user;
+  document.getElementById('splash').style.display='none';
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('userEmail').textContent = user.email;
@@ -460,15 +635,29 @@ async function initApp(user) {
 
 function renderAll() {
   renderHome(); renderStreak(); renderNotes(); renderDates(); renderReminders();
+  renderCustomHabits(); renderDateIdeas(); renderGifts();
 }
 
 // ── Habits ────────────────────────────────────────────────────
+// All habits = built-ins (b0..bN) + user's custom ones (stable ids)
+function allHabits() {
+  const built = builtinHabits.map((hb,i)=>({id:'b'+i, ...hb, custom:false}));
+  const custom = state.customHabits.map(hb=>({...hb, custom:true}));
+  return [...built, ...custom];
+}
+function habitById(id) {
+  if(typeof id === 'number') id = 'b'+id;        // legacy saves
+  return allHabits().find(h=>h.id===id) || null;
+}
+
 function pickPair() {
-  let avail = habits.map((_,i)=>i).filter(i=>!state.usedHabits.includes(i));
-  if(avail.length<2){state.usedHabits=[];avail=habits.map((_,i)=>i);}
-  const shuffled = avail.sort(()=>Math.random()-0.5);
-  state.todayPair = shuffled.slice(0,2);
-  state.usedHabits = [...state.usedHabits,...state.todayPair].slice(-14);
+  const all = allHabits();
+  const usedIds = state.usedHabits.map(u=>typeof u==='number'?'b'+u:u);
+  let avail = all.filter(h=>!usedIds.includes(h.id));
+  if(avail.length<2){ state.usedHabits=[]; avail=all; }
+  const shuffled = [...avail].sort(()=>Math.random()-0.5);
+  state.todayPair = shuffled.slice(0,2).map(h=>h.id);
+  state.usedHabits = [...usedIds,...state.todayPair].slice(-14);
 }
 
 function refreshHabits() {
@@ -499,7 +688,8 @@ function renderHome() {
   container.innerHTML='';
   if(!state.todayPair) return;
   state.todayPair.forEach((hi,idx)=>{
-    const h=habits[hi], done=state.done[idx];
+    const h=habitById(hi); if(!h) return;
+    const done=state.done[idx];
     const card=document.createElement('div'); card.className='card';
     card.innerHTML=`<div class="habit-item"><div class="habit-check ${done?'checked':''}" onclick="toggleDone(${idx})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="habit-text"><div class="habit-title ${done?'done':''}">${h.title}</div><div class="habit-desc">${h.desc}</div><div class="habit-time">${h.time}</div></div></div>`;
     container.appendChild(card);
@@ -603,6 +793,85 @@ async function saveReminders(){
   await saveToCloud(); showToast("Settings saved ✓");
 }
 
+// ── Custom habits ─────────────────────────────────────────────
+function addCustomHabit(){
+  const t=document.getElementById('chTitle').value.trim();
+  const d=document.getElementById('chDesc').value.trim();
+  const tm=document.getElementById('chTime').value.trim();
+  if(!t){showToast("Give the habit a name");return;}
+  state.customHabits.push({id:'c'+Date.now(),title:t,desc:d||'Your own habit.',time:tm||'Anytime'});
+  document.getElementById('chTitle').value='';
+  document.getElementById('chDesc').value='';
+  document.getElementById('chTime').value='';
+  renderCustomHabits(); scheduleSave(); showToast("Habit added ✓");
+}
+function deleteCustomHabit(id){
+  state.customHabits=state.customHabits.filter(h=>h.id!==id);
+  state.usedHabits=state.usedHabits.filter(u=>u!==id);
+  if(state.todayPair && state.todayPair.includes(id)){ state.done=[false,false]; pickPair(); renderHome(); }
+  renderCustomHabits(); scheduleSave();
+}
+function renderCustomHabits(){
+  const el=document.getElementById('customHabitList'); if(!el) return;
+  if(!state.customHabits.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px">No custom habits yet</div>';return;}
+  el.innerHTML=state.customHabits.map(hb=>`<div class="note-card"><div class="note-body"><div class="note-tag">Your habit</div><div class="note-text" style="font-weight:600">${esc(hb.title)}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(hb.desc)} · ${esc(hb.time)}</div></div><span class="note-del" onclick="deleteCustomHabit('${hb.id}')">×</span></div>`).join('');
+}
+
+// ── Ideas: date night ─────────────────────────────────────────
+let currentIdeaTab='date', currentDateCat='out';
+function switchIdeaTab(tab,btn){
+  currentIdeaTab=tab;
+  document.querySelectorAll('#screen-ideas .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('idea-date').style.display = tab==='date'?'':'none';
+  document.getElementById('idea-gift').style.display = tab==='gift'?'':'none';
+}
+function rollDateIdea(){
+  const all=Object.values(dateIdeas).flat();
+  const r=all[Math.floor(Math.random()*all.length)];
+  const el=document.getElementById('dateResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function setDateCat(cat){
+  currentDateCat=cat; renderDateIdeas();
+}
+function renderDateIdeas(){
+  const chips=document.getElementById('dateChips'); if(!chips) return;
+  chips.innerHTML=Object.keys(dateIdeas).map(k=>`<button class="chip ${k===currentDateCat?'active':''}" onclick="setDateCat('${k}')">${dateCategoryLabels[k]}</button>`).join('');
+  document.getElementById('dateList').innerHTML=dateIdeas[currentDateCat].map(idea=>`<div class="card card-sm" style="font-size:14px;line-height:1.5;color:var(--navy)">${esc(idea)}</div>`).join('');
+}
+
+// ── Ideas: gift list ──────────────────────────────────────────
+function addGift(){
+  const n=document.getElementById('giftName').value.trim();
+  const o=document.getElementById('giftOccasion').value;
+  const note=document.getElementById('giftNote').value.trim();
+  if(!n){showToast("What's the gift idea?");return;}
+  state.gifts.unshift({id:'g'+Date.now(),name:n,occasion:o,note:note,got:false});
+  document.getElementById('giftName').value='';
+  document.getElementById('giftNote').value='';
+  renderGifts(); scheduleSave(); showToast("Added to your list 🎁");
+}
+function toggleGift(id){
+  const g=state.gifts.find(x=>x.id===id); if(g) g.got=!g.got;
+  renderGifts(); scheduleSave();
+}
+function deleteGift(id){
+  state.gifts=state.gifts.filter(g=>g.id!==id); renderGifts(); scheduleSave();
+}
+function rollGiftPrompt(){
+  const r=giftPrompts[Math.floor(Math.random()*giftPrompts.length)];
+  const el=document.getElementById('giftResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function renderGifts(){
+  const el=document.getElementById('giftList'); if(!el) return;
+  if(!state.gifts.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px">Nothing on your list yet — add things as she mentions them</div>';return;}
+  el.innerHTML=state.gifts.map(g=>`<div class="note-card"><div class="habit-check ${g.got?'checked':''}" style="margin-top:2px" onclick="toggleGift('${g.id}')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="note-body"><div class="note-tag">${esc(g.occasion)}</div><div class="note-text" style="${g.got?'text-decoration:line-through;opacity:0.5':''}">${esc(g.name)}</div>${g.note?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(g.note)}</div>`:''}</div><span class="note-del" onclick="deleteGift('${g.id}')">×</span></div>`).join('');
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 // ── Nav & utils ───────────────────────────────────────────────
 function goTo(screen,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -619,14 +888,41 @@ function showToast(msg){
 }
 
 // ── Boot ──────────────────────────────────────────────────────
+let booted = false;
+
+function showAuthScreen(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// Restore an existing session on load BEFORE deciding what to show
+async function boot(){
+  try{
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user){ booted=true; await initApp(session.user); }
+    else { showAuthScreen(); }
+  }catch(e){ console.error(e); showAuthScreen(); }
+}
+
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(session?.user) {
-    await initApp(session.user);
-  } else {
-    document.getElementById('auth-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
+  if(event==='INITIAL_SESSION') return;              // boot() handles this
+  if(event==='TOKEN_REFRESHED') return;              // nothing to redraw
+  if(session?.user){
+    if(!booted || currentUser?.id !== session.user.id){
+      booted=true; await initApp(session.user);
+    }
+  } else if(event==='SIGNED_OUT'){
+    booted=false; currentUser=null; showAuthScreen();
   }
 });
+
+// Re-check the session when the app comes back to the foreground
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && currentUser) sb.auth.getSession();
+});
+
+boot();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
