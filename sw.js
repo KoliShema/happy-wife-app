@@ -1,44 +1,63 @@
-const CACHE = "happy-wife-v1";
-const ASSETS = [
-  "./index.html",
-  "./manifest.json",
-  "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap"
-];
+const CACHE = "happy-wife-v3";
 
-// Install — cache core assets
+// Install — take over immediately
 self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
-// Activate — clear old caches
+// Activate — clear every old cache
 self.addEventListener("activate", e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch — serve from cache, fall back to network
 self.addEventListener("fetch", e => {
+  const req = e.request;
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+
+  // Never cache Supabase (auth + data must always be live)
+  if (url.hostname.endsWith("supabase.co")) return;
+
+  const isPage = req.mode === "navigate" ||
+                 req.destination === "document" ||
+                 url.pathname.endsWith(".html");
+
+  if (isPage) {
+    // NETWORK FIRST for the app itself, so updates land right away
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then(r => r || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // CACHE FIRST for static assets (icons, fonts)
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (!res || res.status !== 200 || res.type === "opaque") return res;
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+    caches.match(req).then(cached =>
+      cached || fetch(req).then(res => {
+        if (res && res.status === 200 && res.type !== "opaque") {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
         return res;
-      }).catch(() => caches.match("./index.html"));
-    })
+      }).catch(() => cached)
+    )
   );
 });
 
 // Push notifications
 self.addEventListener("push", e => {
-  const data = e.data ? e.data.json() : { title: "Happy Wife App 💕", body: "Don't forget your 2 daily habits!" };
+  const data = e.data ? e.data.json() : { title: "Happy Wife 💕", body: "Don't forget your 2 daily habits!" };
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
@@ -46,18 +65,12 @@ self.addEventListener("push", e => {
       badge: "./icon-192.png",
       vibrate: [200, 100, 200],
       tag: "happy-wife-reminder",
-      renotify: true,
-      actions: [
-        { action: "open", title: "Open App" },
-        { action: "dismiss", title: "Dismiss" }
-      ]
+      renotify: true
     })
   );
 });
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  if (e.action !== "dismiss") {
-    e.waitUntil(clients.openWindow("./index.html"));
-  }
+  e.waitUntil(clients.openWindow("./index.html"));
 });
