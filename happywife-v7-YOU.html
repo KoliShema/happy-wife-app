@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Happy Wife">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231F1B56'/%3E%3Ctext y='.9em' font-size='80' text-anchor='middle' x='50'%3E%F0%9F%92%95%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Daily habits to keep your wife happy.">
+<meta name="theme-color" content="#1F1B56">
+<link rel="manifest" href="manifest.json">
+<title>Happy Wife</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --navy: #1F1B56; --coral: #EB4137; --coral-tint: #F3A79E;
+  --cream: #FAF9F6; --muted: #7472A0; --border: rgba(31,27,86,0.12);
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppins',sans-serif;color:var(--navy)}
+
+/* Auth screen */
+#splash{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000}
+.splash-heart{font-size:54px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}
+
+#pin-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;z-index:998}
+.pin-lock{font-size:34px;margin-bottom:10px}
+#pin-screen h2{color:white;font-size:19px;font-weight:700;margin-bottom:4px}
+#pin-screen p{color:var(--coral-tint);font-size:12px;margin-bottom:26px;text-align:center}
+.pin-dots{display:flex;gap:14px;margin-bottom:10px}
+.pin-dots i{width:13px;height:13px;border-radius:50%;border:2px solid var(--coral-tint);display:block;transition:all .15s}
+.pin-dots i.on{background:var(--coral);border-color:var(--coral)}
+.pin-dots.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.pin-err{color:var(--coral-tint);font-size:12px;min-height:18px;margin-bottom:14px;text-align:center}
+.pin-pad{display:grid;grid-template-columns:repeat(3,70px);gap:13px}
+.pin-pad button{height:70px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.07);color:white;font-family:'Poppins',sans-serif;font-size:23px;font-weight:500;cursor:pointer}
+.pin-pad button:active{background:rgba(255,255,255,.22)}
+.pin-pad .pin-back{font-size:19px;border-color:transparent;background:none}
+.pin-pad .pin-blank{border-color:transparent;background:none;font-size:12px;color:var(--coral-tint);font-weight:600}
+.pin-forgot{color:var(--coral-tint);font-size:12px;margin-top:26px;cursor:pointer;text-decoration:underline}
+
+#auth-screen{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;z-index:999;
+}
+#auth-screen .logo{font-size:48px;margin-bottom:8px}
+#auth-screen h1{color:white;font-size:24px;font-weight:900;margin-bottom:4px}
+#auth-screen p{color:var(--coral-tint);font-size:13px;margin-bottom:32px;text-align:center}
+.auth-card{background:white;border-radius:20px;padding:24px;width:100%;max-width:340px}
+.auth-tab{display:flex;gap:0;margin-bottom:20px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.auth-tab button{flex:1;padding:10px;border:none;background:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.auth-tab button.active{background:var(--navy);color:white}
+.auth-field{margin-bottom:12px}
+.auth-field label{font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase}
+.auth-field input{width:100%;border:1.5px solid var(--coral-tint);border-radius:10px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);outline:none}
+.auth-field input:focus{border-color:var(--navy)}
+.auth-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.auth-btn:active{opacity:0.85}
+.auth-err{font-size:12px;color:var(--coral);text-align:center;margin-top:8px;min-height:18px}
+.auth-forgot{font-size:12px;color:var(--muted);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.08em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.google-btn{width:100%;background:white;color:#3c4043;border:1.5px solid #dadce0;border-radius:12px;padding:12px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.google-btn:active{background:#f8f9fa}
+
+/* Desktop: constrain app width so it looks like a phone */
+@media (min-width: 600px) {
+  #app{max-width:480px;margin:0 auto;box-shadow:0 0 40px rgba(31,27,86,0.1);background:var(--cream)}
+  #nav{max-width:480px;left:50%;transform:translateX(-50%)}
+}
+
+/* App shell */
+#app{display:flex;flex-direction:column;height:100%}
+#screen-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-top:calc(var(--safe-top)+12px);padding-bottom:calc(var(--safe-bottom)+70px);-webkit-overflow-scrolling:touch}
+#nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);z-index:100}
+.nav-btn{flex:1;border:none;background:none;padding:10px 0 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Poppins',sans-serif}
+.nav-btn svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke 0.2s}
+.nav-btn span{font-size:10px;color:var(--muted);letter-spacing:0.02em;transition:color 0.2s}
+.nav-btn.active svg{stroke:var(--coral)}
+.nav-btn.active span{color:var(--coral);font-weight:700}
+.screen{display:none;padding:0 16px}
+.screen.active{display:block}
+.page-header{margin-bottom:20px}
+.page-header .eyebrow{font-size:12px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
+.page-header h1{font-size:26px;font-weight:900;color:var(--navy);line-height:1.1}
+.page-header .sub{font-size:14px;color:var(--muted);margin-top:4px}
+.card{background:white;border:1px solid var(--border);border-radius:16px;padding:16px 18px;margin-bottom:12px}
+.card-sm{padding:12px 16px;margin-bottom:10px}
+.hero-card{background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;padding:20px;margin-bottom:20px;color:white}
+.hero-card .date-label{font-size:12px;opacity:0.75;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px}
+.hero-card h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.hero-card .sub{font-size:13px;opacity:0.8}
+.streak-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;margin-top:12px}
+.habit-item{display:flex;align-items:flex-start;gap:14px}
+.habit-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--coral-tint);background:white;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.habit-check.checked{background:var(--coral);border-color:var(--coral)}
+.habit-check.checked svg{display:block}
+.habit-check svg{display:none;width:14px;height:14px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.habit-text{flex:1}
+.habit-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:2px}
+.habit-desc{font-size:13px;color:var(--muted);line-height:1.45}
+.habit-time{font-size:11px;color:#EB4137;margin-top:5px;font-weight:700;letter-spacing:0.03em}
+.habit-title.done{text-decoration:line-through;opacity:0.5}
+.section-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+.new-pair-btn{width:100%;border:1.5px solid var(--coral);border-radius:12px;background:white;color:var(--coral);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-top:4px;transition:background 0.15s}
+.new-pair-btn:active{background:var(--coral-tint)}
+.big-streak{text-align:center;padding:32px 20px;background:linear-gradient(135deg,var(--navy) 0%,#312C8A 100%);border-radius:20px;color:white;margin-bottom:20px}
+.big-streak .num{font-size:72px;font-weight:900;line-height:1}
+.big-streak .label{font-size:14px;opacity:0.8;margin-top:6px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;text-align:center}
+.stat-card .val{font-size:26px;font-weight:900;color:var(--coral)}
+.stat-card .lbl{font-size:11px;color:var(--muted);margin-top:3px}
+.note-input-area{margin-bottom:16px}
+.input-row{display:flex;gap:8px;margin-bottom:10px}
+.input-row input,.note-input-area textarea{flex:1;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;width:100%}
+.note-input-area textarea{min-height:80px;resize:none;display:block;margin-bottom:8px}
+.add-btn{background:var(--coral);color:white;border:none;border-radius:12px;padding:11px 16px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.note-card{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.note-body{flex:1}
+.note-tag{font-size:10px;font-weight:700;color:var(--coral);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px}
+.note-text{font-size:14px;color:var(--navy);line-height:1.5}
+.note-del{color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:2px 4px}
+.random-btn{width:100%;background:#EEEDF8;border:1.5px solid rgba(31,27,86,0.2);border-radius:12px;color:var(--navy);font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;padding:13px;cursor:pointer;margin-bottom:16px}
+.random-result{background:var(--navy);color:white;border-radius:14px;padding:16px;text-align:center;font-size:16px;font-style:italic;line-height:1.5;margin-bottom:16px;display:none}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab-btn{flex:1;border:1.5px solid var(--coral-tint);border-radius:10px;padding:9px 0;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:white;color:var(--muted)}
+.tab-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.date-form{margin-bottom:16px}
+.form-field{margin-bottom:10px}
+.form-field label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;display:block;margin-bottom:5px}
+.form-field input,.form-field select{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.submit-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.date-item{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.date-icon{width:44px;height:44px;border-radius:12px;background:#EEEDF8;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.date-info{flex:1}
+.date-name{font-size:15px;font-weight:700;color:var(--navy)}
+.date-when{font-size:12px;color:var(--muted);margin-top:2px}
+.date-countdown{font-size:12px;font-weight:700;color:var(--coral);margin-top:3px}
+.date-del{color:var(--muted);font-size:18px;cursor:pointer}
+.reminder-info{background:#EEEDF8;border:1px solid rgba(31,27,86,0.18);border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.5}
+.reminder-setting{background:white;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.reminder-setting .lbl{font-size:14px;font-weight:700;color:var(--navy)}
+.reminder-setting .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:46px;height:26px;border-radius:13px;background:var(--coral-tint);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--coral)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.toggle.on::after{transform:translateX(20px)}
+.time-picker{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:11px 14px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--navy);background:white;outline:none;margin-top:8px}
+.save-reminder-btn{width:100%;background:var(--navy);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px}
+.signout-btn{width:100%;background:white;color:var(--muted);border:1.5px solid var(--border);border-radius:12px;padding:11px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px}
+.user-email{font-size:12px;color:var(--muted);text-align:center;margin-bottom:12px}
+.toast{position:fixed;bottom:calc(var(--safe-bottom)+80px);left:16px;right:16px;background:var(--navy);color:white;border-radius:12px;padding:13px 16px;font-size:14px;font-weight:700;text-align:center;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--coral-tint);display:inline-block;margin-left:6px;vertical-align:middle}
+.sync-dot.synced{background:#4CAF50}
+.nudge{background:#EEEDF8;border:1px solid rgba(31,27,86,.18);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--navy);cursor:pointer;line-height:1.5}
+.suggest-card{background:var(--navy);color:white;border-radius:16px;padding:18px;margin-bottom:18px}
+.suggest-text{font-size:17px;font-weight:600;line-height:1.4}
+.suggest-meta{font-size:11px;opacity:.65;margin-top:6px;text-transform:uppercase;letter-spacing:.05em}
+.suggest-actions{display:flex;align-items:center;gap:7px;margin-top:14px;flex-wrap:wrap}
+.suggest-label{font-size:12px;opacity:.8;margin-right:3px}
+.star{font-size:22px;color:rgba(255,255,255,.3);cursor:pointer;line-height:1}
+.star.on{color:#FFC107}
+.star.sm{font-size:15px;color:var(--border)}
+.star.sm.on{color:var(--coral)}
+.idea-row{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.idea-text{font-size:14px;line-height:1.5;color:var(--navy);flex:1}
+.idea-stars{display:flex;gap:2px;flex-shrink:0}
+.gift-note{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.45}
+.gift-save{margin-top:10px;background:none;border:1.5px solid var(--coral-tint);color:var(--coral);border-radius:9px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.empty{font-size:13px;color:var(--muted);text-align:center;padding:20px}
+.lead{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.lead.small{font-size:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.info-card{background:white;border:1px solid var(--border);border-radius:14px;margin-bottom:9px;overflow:hidden}
+.info-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+.info-title{flex:1;font-size:14px;font-weight:600;color:var(--navy);line-height:1.4}
+.info-chev{color:var(--coral);font-size:19px;transform:rotate(90deg);transition:transform .2s;flex-shrink:0}
+.info-card.open .info-chev{transform:rotate(-90deg)}
+.info-body{display:none;padding:0 16px 15px}
+.info-card.open .info-body{display:block}
+.info-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:9px}
+.info-do{color:var(--navy)!important;border-left:2px solid var(--coral-tint);padding-left:11px}
+#nav{overflow:hidden}
+.nav-btn span{font-size:9px}
+@media (max-width:370px){.nav-btn span{font-size:8px}.nav-btn svg{width:18px;height:18px}}
+.signout-btn.danger{color:var(--coral);border-color:var(--coral-tint);margin-top:8px}
+.modal{position:fixed;inset:0;background:rgba(31,27,86,.55);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal-card{background:white;border-radius:18px;max-width:440px;width:100%;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:16px;font-weight:700;color:var(--navy)}
+.modal-x{font-size:26px;color:var(--muted);cursor:pointer;line-height:1}
+.modal-body{padding:18px;overflow-y:auto;font-size:13px;line-height:1.6;color:var(--navy)}
+.modal-body h4{font-size:13px;font-weight:700;margin:14px 0 5px}
+.modal-body p{margin-bottom:9px}
+.modal-body ul{margin:0 0 9px 18px}
+.modal-body li{margin-bottom:4px}
+.sync-dot.saving{background:var(--coral-tint)}
+.sync-dot.error{background:#FF9800;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* Category chips for date ideas */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{border:1.5px solid var(--coral-tint);background:white;color:var(--muted);border-radius:20px;padding:7px 13px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip.active{background:var(--navy);border-color:var(--navy);color:white}
+
+/* 6 nav tabs — tighten up */
+.nav-btn{padding:9px 0 5px}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn span{font-size:9px}
+@media (max-width:340px){.nav-btn span{font-size:8px}}
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="splash"><div class="splash-heart">💕</div></div>
+
+<div id="pin-screen" style="display:none">
+  <div class="pin-lock">🔒</div>
+  <h2 id="pin-heading">Enter your PIN</h2>
+  <p id="pin-sub">Keeps your notes private on this device</p>
+  <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+  <div class="pin-err" id="pinErr"></div>
+  <div class="pin-pad">
+    <button onclick="pinPress('1')">1</button><button onclick="pinPress('2')">2</button><button onclick="pinPress('3')">3</button>
+    <button onclick="pinPress('4')">4</button><button onclick="pinPress('5')">5</button><button onclick="pinPress('6')">6</button>
+    <button onclick="pinPress('7')">7</button><button onclick="pinPress('8')">8</button><button onclick="pinPress('9')">9</button>
+    <button class="pin-blank" id="pinCancel" onclick="cancelPinSetup()"></button>
+    <button onclick="pinPress('0')">0</button>
+    <button class="pin-back" onclick="pinBack()">⌫</button>
+  </div>
+  <div class="pin-forgot" onclick="forgotPin()">Forgot your PIN?</div>
+</div>
+
+<div id="auth-screen" style="display:none">
+  <div class="logo">💕</div>
+  <h1>Happy Wife</h1>
+  <p>Sign in to sync your streak across all devices</p>
+  <div class="auth-card">
+    <div class="auth-tab">
+      <button class="active" onclick="switchAuthTab('login',this)">Sign in</button>
+      <button onclick="switchAuthTab('signup',this)">Sign up</button>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signIn()">Sign in</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-err" id="login-err"></div>
+      <div class="auth-forgot" onclick="resetPassword()">Forgot password?</div>
+    </div>
+    <div id="auth-signup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signup-password" placeholder="At least 6 characters"></div>
+      <button class="auth-btn" onclick="signUp()">Create account</button>
+      <div class="auth-divider"><span>or</span></div>
+      <button class="google-btn" onclick="signInGoogle()">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div class="auth-err" id="signup-err"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="legal-modal" class="modal" style="display:none">
+  <div class="modal-card">
+    <div class="modal-head"><h3 id="legal-title"></h3><span class="modal-x" onclick="closeLegal()">&times;</span></div>
+    <div class="modal-body" id="legal-body"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="screen-area">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="hero-card">
+        <div class="date-label" id="heroDate"></div>
+        <h2>Your daily 2 ❤️ <span class="sync-dot" id="syncDot" title="Syncing..."></span></h2>
+        <div class="sub">Two things to make her feel loved today</div>
+        <div class="streak-pill">🔥 <span id="heroStreak">0 day streak</span></div>
+      </div>
+      <div id="habitCards"></div>
+      <button class="new-pair-btn" onclick="refreshHabits()">↺ New pair for today</button>
+    </div>
+
+    <!-- STREAK -->
+    <div class="screen" id="screen-streak">
+      <div class="page-header"><div class="eyebrow">Progress</div><h1>Your streak</h1></div>
+      <div class="big-streak"><div class="num" id="bigStreak">0</div><div class="label">days in a row 🔥</div></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="val" id="statTotal">0</div><div class="lbl">Habits completed</div></div>
+        <div class="stat-card"><div class="val" id="statBest">0</div><div class="lbl">Best streak</div></div>
+        <div class="stat-card"><div class="val" id="statDays">0</div><div class="lbl">Days using app</div></div>
+        <div class="stat-card"><div class="val" id="statDoneToday">0/2</div><div class="lbl">Done today</div></div>
+      </div>
+      <div class="section-label">Recent days</div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="screen" id="screen-notes">
+      <div class="page-header"><div class="eyebrow">Library</div><h1>Love notes</h1><div class="sub">Compliments, things you love about her, sweet nothings.</div></div>
+      <button class="random-btn" onclick="showRandom()">✨ Show me a random one</button>
+      <div class="random-result" id="randomResult"></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchNoteTab('compliments',this)">Compliments</button>
+        <button class="tab-btn" onclick="switchNoteTab('love',this)">I love that...</button>
+        <button class="tab-btn" onclick="switchNoteTab('custom',this)">Custom</button>
+      </div>
+      <div class="note-input-area">
+        <div class="input-row"><input type="text" id="noteInput" placeholder="Add a note..."><button class="add-btn" onclick="addNote()">Add</button></div>
+      </div>
+      <div id="notesList"></div>
+    </div>
+
+    <!-- DATES -->
+    <div class="screen" id="screen-dates">
+      <div class="page-header"><div class="eyebrow">Important</div><h1>Special dates</h1></div>
+      <div class="card date-form">
+        <div class="form-row">
+          <div class="form-field"><label>Event name</label><input type="text" id="dateName" placeholder="Anniversary"></div>
+          <div class="form-field"><label>Date</label><input type="date" id="dateVal"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Type</label>
+            <select id="dateType"><option value="💍">💍 Anniversary</option><option value="🎂">🎂 Birthday</option><option value="💕">💕 Special day</option><option value="🌹">🌹 Date night</option><option value="⭐">⭐ Other</option></select>
+          </div>
+          <div class="form-field"><label>Repeats yearly</label>
+            <select id="dateRepeat"><option value="1">Yes</option><option value="0">No</option></select>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="addDate()">Add date</button>
+      </div>
+      <div class="section-label">Upcoming</div>
+      <div id="datesList"></div>
+    </div>
+
+    <!-- IDEAS -->
+    <div class="screen" id="screen-ideas">
+      <div class="page-header"><div class="eyebrow">Inspiration</div><h1>Ideas</h1></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchIdeaTab('date',this)">Date night</button>
+        <button class="tab-btn" onclick="switchIdeaTab('gift',this)">Gifts</button>
+        <button class="tab-btn" onclick="switchIdeaTab('say',this)">Saying it</button>
+      </div>
+
+      <div id="idea-date">
+        <div id="profileNudge"></div>
+        <button class="random-btn" onclick="rollDateIdea()">Suggest something</button>
+        <div id="dateResult" class="suggest-card" style="display:none"></div>
+
+        <div class="section-label">Browse</div>
+        <div class="chip-row" id="dateChips"></div>
+        <div id="dateList"></div>
+
+        <div class="section-label">Your own ideas</div>
+        <div class="input-row">
+          <input type="text" id="customDateInput" placeholder="Add a date idea...">
+          <button class="add-btn" onclick="addCustomDate()">Add</button>
+        </div>
+        <div id="customDateList"></div>
+      </div>
+
+      <div id="idea-gift" style="display:none">
+        <div id="giftNudge"></div>
+        <div class="form-row">
+          <div class="form-field"><label>Occasion</label>
+            <select id="giftFor"><option>Anniversary</option><option>Birthday</option><option>Yom Tov</option><option>Just because</option></select>
+          </div>
+          <div class="form-field"><label>Budget</label>
+            <select id="giftBudget"><option value="0">Costs nothing</option><option value="1" selected>Modest</option><option value="2">Happy to spend</option></select>
+          </div>
+        </div>
+        <button class="random-btn" onclick="generateGifts()">Give me ideas for her</button>
+        <div id="giftIdeas"></div>
+
+        <div class="section-label">Your list</div>
+        <div class="card">
+          <div class="form-field"><label>Gift idea</label><input type="text" id="giftName" placeholder="What she'd love"></div>
+          <div class="form-row">
+            <div class="form-field"><label>For</label>
+              <select id="giftOccasion"><option>Anniversary</option><option>Birthday</option><option>Yom Tov</option><option>Just because</option><option>Other</option></select>
+            </div>
+            <div class="form-field"><label>Note</label><input type="text" id="giftNote" placeholder="Size, colour, where she saw it"></div>
+          </div>
+          <button class="submit-btn" onclick="addGift()">Add to list</button>
+        </div>
+        <div id="giftList"></div>
+      </div>
+
+      <div id="idea-say" style="display:none">
+        <div class="lead">How a conversation opens mostly decides how it ends. These come from the Gottmans' research on couples, not from anyone's opinion about what wives want to hear.</div>
+        <div id="sayList"></div>
+        <div class="lead small">Shapes, not scripts. What you actually say is yours to choose — you know her and nobody writing an app does.</div>
+      </div>
+    </div>
+
+    <!-- ABOUT HER -->
+    <div class="screen" id="screen-profile">
+      <div class="page-header"><div class="eyebrow">Settings</div><h1>About her</h1>
+        <div class="sub">So the suggestions fit your marriage instead of a generic one. Skip anything you're not sure about.</div>
+      </div>
+      <div class="card">
+        <div class="form-field"><label>Does she prefer getting out, or staying in?</label>
+          <select id="pfPlace"><option value="">No strong preference</option><option value="out">Getting out</option><option value="home">Staying in</option></select>
+        </div>
+        <div class="form-field"><label>What's realistic to spend?</label>
+          <select id="pfBudget"><option value="">Varies</option><option value="0">Keep it free</option><option value="1">A little</option><option value="2">Money isn't the issue</option></select>
+        </div>
+        <div class="form-field"><label>How much time do you realistically get?</label>
+          <select id="pfTime"><option value="">Varies</option><option value="0">Under half an hour</option><option value="1">An hour or two</option><option value="2">A whole evening</option></select>
+        </div>
+        <div class="form-field"><label>Kids at home?</label>
+          <select id="pfKids"><option value="">Not saying</option><option value="1">Yes</option><option value="0">No</option></select>
+        </div>
+        <div class="form-field"><label>Is a car usually available?</label>
+          <select id="pfCar"><option value="1">Yes</option><option value="0">No</option></select>
+        </div>
+        <div class="form-field"><label>What is she actually into?</label>
+          <div class="chip-row" id="pfInterests"></div>
+        </div>
+        <button class="submit-btn" onclick="saveProfile()">Save</button>
+      </div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Pause closeness suggestions</div>
+          <div class="sub">Leaves out ideas that assume physical contact. Turn it on and off as you need.</div>
+        </div>
+        <button class="toggle" id="togglePause" onclick="togglePauseContact()"></button>
+      </div>
+    </div>
+
+    <!-- YOU -->
+    <div class="screen" id="screen-you">
+      <div class="page-header"><div class="eyebrow">Looking after yourself</div><h1>You</h1>
+        <div class="sub">A marriage is hard to hold up when you're running on nothing. None of this is therapy, and none of it is a substitute for seeing someone.</div>
+      </div>
+      <div id="careList"></div>
+      <div class="lead small">Sources: research on men's help-seeking and social support, Gottman Institute, and a 2024 BMJ review of exercise for depression. Where the evidence is shakier, it says so.</div>
+    </div>
+
+    <!-- REMINDERS -->
+    <div class="screen" id="screen-reminders">
+      <div class="page-header"><div class="eyebrow">Settings</div><h1>Reminders</h1></div>
+      <div class="reminder-info">ℹ️ Reminders use your browser's notification system. Tap "Save" and allow notifications when prompted.</div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Morning reminder</div><div class="sub">Start your day with your 2 habits</div><input type="time" class="time-picker" id="morningTime" value="08:00"></div>
+        <button class="toggle" id="toggleMorning" onclick="toggleReminder('morning')"></button>
+      </div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Evening check-in</div><div class="sub">Remind you if habits aren't done yet</div><input type="time" class="time-picker" id="eveningTime" value="20:00"></div>
+        <button class="toggle" id="toggleEvening" onclick="toggleReminder('evening')"></button>
+      </div>
+      <div class="reminder-setting">
+        <div><div class="lbl">Anniversary alerts</div><div class="sub">1 week before special dates</div></div>
+        <button class="toggle" id="toggleDates" onclick="toggleReminder('dates')"></button>
+      </div>
+      <button class="save-reminder-btn" onclick="saveReminders()">Save reminder settings</button>
+
+      <div class="section-label">Your own habits</div>
+      <div class="reminder-info">Add habits that fit your marriage. They mix into the daily rotation alongside the built-in ones.</div>
+      <div class="card">
+        <div class="form-field"><label>Habit</label><input type="text" id="chTitle" placeholder="e.g. Call her on your lunch break"></div>
+        <div class="form-field"><label>Details</label><input type="text" id="chDesc" placeholder="What it actually looks like"></div>
+        <div class="form-field"><label>How long</label><input type="text" id="chTime" placeholder="e.g. ~5 min"></div>
+        <button class="submit-btn" onclick="addCustomHabit()">Add habit</button>
+      </div>
+      <div id="customHabitList"></div>
+      <div class="section-label">Personalising</div>
+      <button class="signout-btn" onclick="openProfile()">About her — tune the suggestions</button>
+
+      <div class="section-label">Privacy</div>
+      <div class="reminder-setting">
+        <div>
+          <div class="lbl">PIN lock</div>
+          <div class="sub">Ask for a 4-digit PIN when you open the app</div>
+        </div>
+        <button class="toggle" id="togglePin" onclick="togglePinSetting()"></button>
+      </div>
+      <button class="signout-btn" id="changePinBtn" onclick="changePin()" style="display:none">Change PIN</button>
+      <div class="reminder-info">The PIN stops someone picking up your phone and reading this. It's stored on this device only, so it doesn't travel to your other phones, and it isn't what protects your account — your password does that.</div>
+
+      <div class="section-label">Your data</div>
+      <div class="reminder-info">
+        Everything you enter is private to your account. Nobody else using this app can see it.
+        We store only your email address and what you enter in the app — nothing else, and we never sell or share it.
+      </div>
+      <button class="signout-btn" onclick="openLegal('privacy')">Privacy policy</button>
+      <button class="signout-btn" onclick="openLegal('terms')">Terms of use</button>
+      <button class="signout-btn" onclick="exportData()">Download my data</button>
+      <div class="user-email" id="userEmail"></div>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+      <button class="signout-btn danger" onclick="deleteAccount()">Delete my account</button>
+    </div>
+
+  </div>
+
+  <nav id="nav">
+    <button class="nav-btn active" onclick="goTo('home',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg><span>Today</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('streak',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Streak</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('notes',this)">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>Notes</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('ideas',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg><span>Ideas</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('dates',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Dates</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('you',this)">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><circle cx="12" cy="12" r="2.2"/></svg><span>You</span>
+    </button>
+    <button class="nav-btn" onclick="goTo('reminders',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Settings</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ujpwrinutaweqcxgjvvr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqcHdyaW51dGF3ZXFjeGdqdnZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NTQ5NTIsImV4cCI6MjEwNjUzMDk1Mn0.bGyogL1nmt7Qi553gPkCZ3CBXNT6gujAdpa85G2xoEc';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,          // keep session in localStorage
+    autoRefreshToken: true,        // refresh before it expires
+    detectSessionInUrl: true,      // pick up the token after Google redirect
+    storage: window.localStorage,
+    storageKey: 'happywife-auth',
+    flowType: 'pkce'
+  }
+});
+
+const builtinHabits = [
+  {title:"Morning hug or kiss",desc:"Before phones, before rushing out. Ten seconds.",time:"Morning · ~10 sec"},
+  {title:"Say 'I love you' unprompted",desc:"No occasion. Just because.",time:"Anytime"},
+  {title:"Send a sweet text",desc:"One genuine line during the day.",time:"Midday · ~1 min"},
+  {title:"A specific compliment",desc:"Name exactly what caught your eye — not just 'you look nice.'",time:"Anytime · 30 sec"},
+  {title:"Make her coffee or tea",desc:"The way she likes it, without being asked.",time:"Morning · ~3 min"},
+  {title:"Take a task off her plate",desc:"Do something she usually handles. Just handle it.",time:"Varies"},
+  {title:"Leave a kind note",desc:"Sticky note, a text, anything she'll find later.",time:"~2 min"},
+  {title:"Ask about her day and really listen",desc:"Phone down. Follow up on something from yesterday.",time:"Evening · ~10 min"},
+  {title:"Phone down for 30 minutes",desc:"Fully present. No screens, no half-listening.",time:"Evening · 30 min"},
+  {title:"Pick up her favorite snack",desc:"Remember what she likes. Show up with it.",time:"~2 min"},
+  {title:"Thank her for something specific",desc:"Name what she did and why it mattered.",time:"~1 min"},
+  {title:"Watch her show with her",desc:"No commentary. Just enjoy it together.",time:"Evening · ~30 min"},
+  {title:"Share something funny",desc:"A meme, clip, or story that made you think of her.",time:"Anytime · 1 min"},
+  {title:"Short walk together",desc:"Even 10 minutes around the block.",time:"~10–20 min"},
+  {title:"Notice when she's tired",desc:"Offer rest, or take over something without being asked.",time:"Anytime"},
+  {title:"Refill her water bottle",desc:"Small, consistent, thoughtful.",time:"30 sec"},
+  {title:"Ask her opinion on something real",desc:"Something that actually matters to you.",time:"~5 min"},
+  {title:"Acknowledge something she handled well",desc:"Point it out. She may not know you noticed.",time:"~1 min"},
+  {title:"Bring her one flower",desc:"Not a bouquet — just one. From the store or the yard.",time:"~2 min"},
+  {title:"Tell her what you admire about her",desc:"A character trait, not just how she looks.",time:"~2 min"},
+  {title:"Ask what would actually help",desc:"Then do that thing, not the thing you'd rather do.",time:"~5 min"},
+  {title:"Let her sleep in",desc:"Get up with the kids and keep the house quiet.",time:"Morning"},
+  {title:"Take bedtime on your own",desc:"She gets an hour back. Don't tell her afterwards how hard it was.",time:"Evening · ~1 hr"},
+  {title:"Handle the thing she's been dreading",desc:"The phone call, the form, the appointment.",time:"Varies"},
+  {title:"Say she was right",desc:"When she was. Nothing after it.",time:"~10 sec"},
+  {title:"Don't correct her story",desc:"She's telling it to someone. The detail doesn't matter.",time:"Anytime"},
+  {title:"Check on the thing she was worried about",desc:"She mentioned it days ago. Ask how it turned out.",time:"~2 min"},
+  {title:"Say something good about her in front of the kids",desc:"They're listening to how you talk about her.",time:"~30 sec"},
+  {title:"Let her finish",desc:"Even when you know where it's going.",time:"Anytime"},
+  {title:"Give her first pick",desc:"The seat, the portion, what's on.",time:"~5 sec"},
+  {title:"Apologize without the 'but'",desc:"The sentence ends where the sorry ends.",time:"~1 min"},
+  {title:"Wake up before her",desc:"Coffee on and lunches done before she's up.",time:"Morning · ~20 min"},
+  {title:"Notice what nobody else noticed",desc:"Something she handled that went unthanked.",time:"~1 min"},
+  {title:"Take the kids out",desc:"An hour of quiet house is worth more than most presents.",time:"~1 hr"},
+  {title:"Ask about her day before yours",desc:"Hers first, and don't rush through it to get to yours.",time:"Evening · ~10 min"},
+  {title:"Ask whether she wants it fixed",desc:"Sometimes she wants you to hear it. You can just ask which.",time:"Evening"},
+  {title:"Make the bed if she usually does",desc:"Before she gets back to the room.",time:"~2 min"},
+  {title:"Tell her what you're glad about",desc:"Something about your life together.",time:"~2 min"},
+  {title:"Stand up for her when she's not there",desc:"To your family, to a friend. It gets back to her.",time:"Anytime"},
+  {title:"Take something she mentioned seriously",desc:"She said it once in passing. Act like she said it twice.",time:"Varies"},
+  {title:"Clear the thing she keeps walking around",desc:"The pile, the broken drawer, the box in the hall.",time:"~15 min"},
+  {title:"Sit down when she's talking",desc:"Not standing with your keys still in your hand.",time:"Evening"},
+];
+const dateIdeas = [
+  {id:"d61d7dd9e",cat:"out",t:"Try a kosher restaurant neither of you has been to",cost:1,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d7c1220c5",cat:"out",t:"Walk somewhere scenic right before sunset",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"daa1afff7",cat:"out",t:"Botanical garden or arboretum",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"dba2d00bf",cat:"out",t:"Drive to a lookout point with coffee and sit in the car talking",cost:1,time:1,place:"out",kids:0,contact:0,car:1},
+  {id:"d3505f749",cat:"out",t:"Visit a museum, pick one neither of you knows anything about",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d7340d534",cat:"out",t:"Browse a bookstore and each pick a book for the other",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d691d7f82",cat:"out",t:"Hike a local trail you've never done",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d42bc7555",cat:"out",t:"Picnic with food you packed together",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d7c28f1e4",cat:"out",t:"Mini golf",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"dbfdf3e6d",cat:"out",t:"Bowling",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"deb43d224",cat:"out",t:"Farmers market on a Sunday morning",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d4772d359",cat:"out",t:"Apple or berry picking in season",cost:1,time:1,place:"out",kids:0,contact:0,car:1},
+  {id:"d0d44b42b",cat:"out",t:"Drive to a nearby town you've never explored",cost:1,time:2,place:"out",kids:0,contact:0,car:1},
+  {id:"df6dc845c",cat:"out",t:"Kosher bakery crawl, try three in one afternoon",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"ddfaa2e13",cat:"out",t:"Ice cream and a long walk",cost:1,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"dba8b56f1",cat:"out",t:"Aquarium or zoo",cost:2,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"db1d54124",cat:"out",t:"Pottery painting place",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d72ea5f4d",cat:"out",t:"Sefarim store, each pick something for the other",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"dbaa28dbc",cat:"out",t:"Early drive out to get breakfast somewhere",cost:1,time:1,place:"out",kids:0,contact:0,car:1},
+  {id:"da4e5056b",cat:"out",t:"Go to a shiur together",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"dfa9079d3",cat:"out",t:"Get up for a sunrise once",cost:0,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d0c5d9173",cat:"home",t:"Cook a new recipe together, start to finish",cost:1,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"de55d042e",cat:"home",t:"Order in from somewhere new and eat by candlelight once the house is quiet",cost:1,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"d481c2875",cat:"home",t:"Learn something together, a sefer or the parsha or a book you both pick",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"dde5e479d",cat:"home",t:"Go through old photos",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"dcfc83221",cat:"home",t:"Plan a trip together, even if it's hypothetical",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d19a0fb0d",cat:"home",t:"Board game or cards, winner picks next week",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d194ce8bd",cat:"home",t:"Breakfast for dinner",cost:1,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d1ff6135d",cat:"home",t:"Build a puzzle over a few nights",cost:1,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"db51b1f6b",cat:"home",t:"Write each other a letter and read them out loud",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"de0d8e920",cat:"home",t:"Dessert night, make something you'd never normally attempt",cost:1,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"d9795b51d",cat:"home",t:"Stargaze from the backyard or the roof",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d2ff14199",cat:"home",t:"Ask each other questions you've never asked before",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d5ce0e2c7",cat:"home",t:"Rearrange a room together just for fun",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"dc95219a7",cat:"home",t:"Tea once the house is quiet, with nothing turned on",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d5cf98195",cat:"home",t:"Go through the wedding photos",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d984d5577",cat:"home",t:"Write down what you each remember about the first year",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d2a670c89",cat:"home",t:"Plan the next Yom Tov properly, not the week before",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"dcb69ec20",cat:"home",t:"Each pick a song and say why",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"dbdd9ac97",cat:"quick",t:"Coffee in the car before you both start the day",cost:1,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d7947e1f5",cat:"quick",t:"Once around the block before bed",cost:0,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d1085907b",cat:"quick",t:"Fifteen minutes outside together with the phones left inside",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"dcbbbbaf5",cat:"quick",t:"Drive her to an errand she was going to do alone",cost:0,time:0,place:"out",kids:0,contact:0,car:1},
+  {id:"d35de6a59",cat:"quick",t:"Early breakfast out before work",cost:1,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d5798b6a6",cat:"quick",t:"Ten minutes on the porch before anyone's up",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d8ffe92d4",cat:"quick",t:"Sit in the car in the driveway and don't go in yet",cost:0,time:0,place:"out",kids:0,contact:0,car:1},
+  {id:"df2f78cab",cat:"quick",t:"Pick up something sweet and eat it standing in the kitchen",cost:1,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d002c84d0",cat:"quick",t:"Take the long way home from wherever you both are",cost:0,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d7583bbad",cat:"talk",t:"What was the best month of the last year, and why",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d246cc34f",cat:"talk",t:"One thing you each want to be different a year from now",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"daaf61aad",cat:"talk",t:"What you each thought of the other when you first met",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d383c2994",cat:"talk",t:"Something you're each worried about that you haven't said out loud",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d2aa2f94f",cat:"talk",t:"What you'd each do with a free week",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"df5c8403c",cat:"talk",t:"Something she's always wanted to learn, and something you have",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"da77cecb7",cat:"talk",t:"What you'd change about how Shabbos runs in your house",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"df7951617",cat:"talk",t:"The best advice either of you got about marriage, and whether it held up",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d4867c300",cat:"talk",t:"What you want the house to feel like in ten years",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d8ea34753",cat:"talk",t:"Something you're each proud of this year that nobody mentioned",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"db2b6e928",cat:"talk",t:"What she wants more of, and what she wants less of",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d88962bc4",cat:"talk",t:"What each of you is finding hardest right now",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d3cc00b90",cat:"shabbos",t:"Shabbos afternoon walk, just the two of you",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"dac044461",cat:"shabbos",t:"Melave Malka for two, no guests",cost:1,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"d0eead830",cat:"shabbos",t:"One Shabbos with no guests at all",cost:0,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"d3413a00b",cat:"shabbos",t:"Learn together Shabbos afternoon",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d25a7c3bc",cat:"shabbos",t:"Seudah shlishis somewhere different in the house",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d8c95dd75",cat:"shabbos",t:"Sing zemiros together, even if you're not singers",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d8a4a76da",cat:"shabbos",t:"Friday afternoon, bake challah together",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"df86d901f",cat:"shabbos",t:"Take the long way back from shul",cost:0,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"dc323d521",cat:"shabbos",t:"Stay at the table after everyone's left",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"de4837b0e",cat:"shabbos",t:"Look at the parsha together before Shabbos so you both have something to say",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d28d9ae8c",cat:"shabbos",t:"Go visit someone together, just the two of you",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"db1013082",cat:"special",t:"Take her to where you got engaged",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d5bea165b",cat:"special",t:"Plan something she doesn't have to organise any part of",cost:0,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"d924d51f6",cat:"special",t:"Clear her whole day, you handle everything",cost:0,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"da2beb84e",cat:"special",t:"Write her a letter for your anniversary instead of buying something",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d98f7dbdf",cat:"special",t:"Recreate your first date as closely as you can remember it",cost:1,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d38855c33",cat:"special",t:"Book a nice kosher restaurant for an anniversary",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d2163be06",cat:"special",t:"Shabbos away at a hotel or B&B",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d5f35abb7",cat:"special",t:"One night away, somewhere quiet",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d5ef7f4f4",cat:"special",t:"Buy the thing she's been looking at for a year",cost:2,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d00dd0c12",cat:"special",t:"Arrange the afternoon off for her and don't tell her what for",cost:1,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d84825f33",cat:"budget",t:"Coffee and a long walk",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d377d75ec",cat:"budget",t:"Library date, read next to each other",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"de13cf2cd",cat:"budget",t:"Free museum day",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d6445552d",cat:"budget",t:"Homemade pizza night",cost:1,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"dbf1b1f45",cat:"budget",t:"Public garden or park you've never been to",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d0311f75d",cat:"budget",t:"Make hot drinks and sit outside in the cold",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
+  {id:"d55a9f89d",cat:"budget",t:"Split one dessert somewhere nice instead of a whole meal",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d836398aa",cat:"budget",t:"Park bench, two coffees, an hour",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d96b64f85",cat:"budget",t:"Window shopping, pick what you'd buy if money were no object",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
+  {id:"d29a094be",cat:"budget",t:"Something from the bakery, eaten outside",cost:1,time:0,place:"out",kids:0,contact:0,car:0},
+  {id:"d73036c40",cat:"kids",t:"Once around the block after the kids are down",cost:0,time:0,place:"out",kids:1,contact:0,car:0},
+  {id:"dba06550b",cat:"kids",t:"Go pick the kids up together and take the long way back",cost:0,time:0,place:"out",kids:1,contact:0,car:0},
+  {id:"d57954cbb",cat:"kids",t:"Order in and eat properly after the kids are asleep",cost:1,time:2,place:"home",kids:1,contact:0,car:0},
+  {id:"d3837948a",cat:"kids",t:"Go through photos from before the kids",cost:0,time:1,place:"home",kids:1,contact:0,car:0},
+  {id:"d78850438",cat:"kids",t:"Tea after the kids are asleep with nothing turned on",cost:0,time:0,place:"home",kids:1,contact:0,car:0},
+  {id:"d5a4ba9af",cat:"kids",t:"Weekend away, no kids",cost:2,time:2,place:"out",kids:1,contact:0,car:0},
+  {id:"d1ecb9903",cat:"kids",t:"Book the hotel and handle the kids yourself",cost:2,time:2,place:"out",kids:1,contact:0,car:0},
+  {id:"d6d9da8b2",cat:"contact",t:"Give each other a long massage, no phones",cost:0,time:1,place:"home",kids:0,contact:1,car:0},
+  {id:"d2fe26afb",cat:"contact",t:"Shabbos nap together instead of separately",cost:0,time:1,place:"home",kids:0,contact:1,car:0}
+];
+const dateCategoryLabels = {"out": "Out & about", "home": "At home", "quick": "Under 30 min", "talk": "Things to talk about", "shabbos": "Shabbos & Yom Tov", "special": "Special occasion", "budget": "Low cost", "kids": "With kids at home", "contact": "Just the two of you"};
+const giftBank = [
+  {id:"g2a844d41",t:"Something she mentioned once and hasn't brought up again",ints:[],b:0,n:"The whole gift is that you remembered."},
+  {id:"g29fc13d6",t:"The thing she looked at twice and put back down",ints:[],b:1,n:"You were there. You saw it."},
+  {id:"geb1dd38e",t:"Something that replaces what she's been making do with",ints:[],b:1,n:"The broken one she's been working around."},
+  {id:"gd9148c4d",t:"An afternoon with nothing scheduled in it",ints:[],b:0,n:"You take everything else."},
+  {id:"g10642ff0",t:"Something for her that isn't really for the house",ints:[],b:1,n:"Not a mixer. Not towels."},
+  {id:"gfcdd8c67",t:"Something she had before the kids and gave up",ints:[],b:1,n:"Ask her what she misses."},
+  {id:"g467ff249",t:"Pay for the thing she keeps calling too expensive",ints:[],b:2,n:"She won't buy it herself. That's why it works."},
+  {id:"gdef75096",t:"Ask her sister or closest friend \u2014 they'll know",ints:[],b:1,n:"They've heard things you haven't."},
+  {id:"g5c6f00ae",t:"A day where she doesn't cook or clean anything",ints:[],b:0,n:"Not a note promising it. Actually do it."},
+  {id:"g64cf6616",t:"Print the photo of the kids she only has on her phone",ints:[],b:1,n:"Framed, on a wall."},
+  {id:"g8bcb3c5d",t:"Nothing bought \u2014 you handle everything for a day",ints:[],b:0,n:"Harder than buying something, and worth more."},
+  {id:"g72acce40",t:"Her favorite flowers on an ordinary Tuesday",ints:[],b:1,n:"No occasion is the point."},
+  {id:"g8ca1cfba",t:"A letter about the last ten years",ints:[],b:0,n:"Longer than a card. Say the specific things."},
+  {id:"gf657f842",t:"Her favorite thing from the store that's two hours away",ints:[],b:1,n:"The drive is part of it."},
+  {id:"g7ef77fde",t:"Good knife, properly sharp",ints:["cooking"],b:2,n:"If she cooks every day, she'll use it every day."},
+  {id:"g2dbc1532",t:"A cookbook she'd actually open",ints:["cooking"],b:1,n:"Ask what she's been wanting to try."},
+  {id:"gbdae35f1",t:"The pan she's been making do without",ints:["cooking"],b:1,n:""},
+  {id:"g5c41005e",t:"A cooking class, and you handle the house",ints:["cooking"],b:2,n:""},
+  {id:"gea93fc2b",t:"A sefer or book she'd genuinely read",ints:["reading", "learning"],b:1,n:"Not one you think she should read."},
+  {id:"gf95cbc22",t:"A subscription to something she reads",ints:["reading"],b:1,n:""},
+  {id:"g0617e49a",t:"A shiur or course she's mentioned",ints:["learning"],b:1,n:""},
+  {id:"g357c2955",t:"A quiet chair and a lamp, somewhere that's hers",ints:["reading", "quiet"],b:2,n:""},
+  {id:"g936171bc",t:"Proper shoes for walking",ints:["outdoors"],b:2,n:""},
+  {id:"g4a26211a",t:"A day out somewhere she's wanted to go",ints:["outdoors", "going_out"],b:1,n:""},
+  {id:"gf6380f17",t:"A good coat, the kind she won't buy herself",ints:["outdoors"],b:2,n:""},
+  {id:"g92ff204d",t:"Tickets to something appropriate she'd love",ints:["music", "going_out"],b:2,n:""},
+  {id:"gd03a5321",t:"Lessons for an instrument she used to play",ints:["music"],b:2,n:""},
+  {id:"gf91f7fee",t:"Materials for the thing she keeps saying she'd like to try",ints:["making"],b:1,n:""},
+  {id:"geacdca1d",t:"A class in whatever she makes",ints:["making"],b:1,n:""},
+  {id:"g7746021a",t:"Nice bedding, the kind you don't buy yourself",ints:["home"],b:2,n:""},
+  {id:"g360d5374",t:"Something that takes one chore off her for good",ints:["home"],b:2,n:"A dishwasher, a cleaner once a fortnight."},
+  {id:"g51a83502",t:"An hour where the house is empty and she's in it",ints:["quiet"],b:0,n:""},
+  {id:"g0b6d1d09",t:"A sheitel service, booked and paid for",ints:["home"],b:2,n:""},
+  {id:"ga677c7b7",t:"Dinner somewhere she picks, you book it",ints:["going_out"],b:2,n:""},
+  {id:"gd29d3e7c",t:"A night away, the kids handled",ints:["going_out"],b:2,n:""}
+];
+
+
+const defaultNotes = {
+  compliments:[
+    "You're better at this than you give yourself credit for",
+    "I'd pick you again",
+    "You're the most capable person I know",
+    "You look better now than when we met",
+    "You make hard things look easy",
+    "I like watching you with the kids",
+    "You're funnier than me and we both know it",
+    "You're the one people call when it actually matters",
+    "You still make me nervous sometimes",
+    "I notice when you walk into a room",
+    "You're kinder than you have to be",
+    "Our kids got lucky",
+    "You're a good person to be married to",
+    "You handle things I couldn't",
+    "You have better taste than me"
+  ],
+  love:[
+    "I love that you remember what everyone's going through",
+    "I love that you say what you think",
+    "I love how you are when nobody's watching",
+    "I love that you don't give up on people",
+    "I love your handwriting",
+    "I love that you still get excited about small things",
+    "I love how you talk to your mother",
+    "I love that you tell me when I'm wrong",
+    "I love watching you work something out",
+    "I love that you can sit with someone who's upset",
+    "I love that you don't pretend",
+    "I love how you are on Erev Shabbos, even when it's late",
+    "I love that you worry about the right things",
+    "I love your laugh when you're caught off guard",
+    "I love that you married me"
+  ],
+  custom:[]
+};
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+let currentUser = null;
+let state = {
+  today: new Date().toDateString(),
+  todayPair: null, todayDate: null,
+  done: [false,false], usedHabits: [],
+  streak: 0, bestStreak: 0, lastStreakDay: '',
+  totalDone: 0, daysUsed: 0, history: [],
+  notes: JSON.parse(JSON.stringify(defaultNotes)),
+  dates: [],
+  customHabits: [],
+  gifts: [],
+  customDates: [],
+  ratings: {},
+  profile: null,
+  reminders: {morning:false,evening:false,dates:false,morningTime:'08:00',eveningTime:'20:00'}
+};
+let syncTimer = null;
+let currentNoteTab = 'compliments';
+
+// ── Auth ─────────────────────────────────────────────────────
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('auth-login').style.display = tab==='login'?'':'none';
+  document.getElementById('auth-signup').style.display = tab==='signup'?'':'none';
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signInWithPassword({email, password:pass});
+  if(error) err.textContent = error.message;
+}
+
+async function signUp() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  const err = document.getElementById('signup-err');
+  err.textContent = '';
+  const {error} = await sb.auth.signUp({email, password:pass});
+  if(error) err.textContent = error.message;
+  else err.style.color='green', err.textContent = 'Check your email to confirm your account!';
+}
+
+async function signInGoogle() {
+  const {error} = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error) { document.getElementById('login-err').textContent = error.message; }
+}
+
+async function resetPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if(!email){document.getElementById('login-err').textContent='Enter your email first';return;}
+  await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  document.getElementById('login-err').style.color='green';
+  document.getElementById('login-err').textContent='Password reset email sent!';
+}
+
+async function signOut() {
+  pinBuf=''; pinFirst=''; lastHidden=0;
+  hidePinScreen();
+  await sb.auth.signOut();
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// ── Supabase sync ─────────────────────────────────────────────
+async function loadFromCloud() {
+  if(!currentUser) return;
+  setSyncDot(false);
+  let data, error;
+  try{
+    ({data,error} = await sb.from('user_data').select('*').eq('user_id',currentUser.id).single());
+  }catch(e){ error = e; }
+  // PGRST116 = no row yet, which is normal for a brand new account
+  if(error && error.code !== 'PGRST116'){
+    console.error('Load failed:', error);
+    setSyncStatus('error');
+    showToast("Couldn't load your data — check your connection");
+    return false;
+  }
+  if(data) {
+    state.streak = data.streak||0;
+    state.bestStreak = data.best_streak||0;
+    state.lastStreakDay = data.last_streak_day||'';
+    state.totalDone = data.total_done||0;
+    state.daysUsed = data.days_used||0;
+    state.history = data.history||[];
+    state.notes = data.notes||JSON.parse(JSON.stringify(defaultNotes));
+    state.customHabits = state.notes._customHabits || [];
+    state.gifts = state.notes._gifts || [];
+    state.customDates = state.notes._customDates || [];
+    state.ratings = state.notes._ratings || {};
+    state.profile = state.notes._profile || null;
+    delete state.notes._customHabits; delete state.notes._gifts;
+    delete state.notes._customDates; delete state.notes._ratings; delete state.notes._profile;
+    if(!state.notes.compliments) state.notes.compliments=[];
+    if(!state.notes.love) state.notes.love=[];
+    if(!state.notes.custom) state.notes.custom=[];
+    state.dates = data.dates||[];
+    state.reminders = data.reminders||state.reminders;
+    state.todayPair = data.today_pair||null;
+    state.todayDate = data.today_date||null;
+    state.done = data.done||[false,false];
+    state.usedHabits = data.used_habits||[];
+  }
+  setSyncStatus('synced');
+  return true;
+}
+
+let pendingSave = false, saveRetries = 0;
+
+async function saveToCloud() {
+  if(!currentUser) return false;
+  setSyncStatus('saving');
+  const payload = {
+    user_id: currentUser.id,
+    streak: state.streak, best_streak: state.bestStreak,
+    last_streak_day: state.lastStreakDay, total_done: state.totalDone,
+    days_used: state.daysUsed, history: state.history,
+    notes: {...state.notes, _customHabits: state.customHabits, _gifts: state.gifts,
+            _customDates: state.customDates, _ratings: state.ratings, _profile: state.profile},
+    dates: state.dates, reminders: state.reminders,
+    today_pair: state.todayPair, today_date: state.todayDate,
+    done: state.done, used_habits: state.usedHabits,
+    updated_at: new Date().toISOString()
+  };
+  try{
+    const {error} = await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+    if(error) throw error;
+    pendingSave = false; saveRetries = 0;
+    localStorage.removeItem('hw-pending');
+    setSyncStatus('synced');
+    return true;
+  }catch(e){
+    console.error('Save failed:', e);
+    pendingSave = true;
+    // Keep a local copy so nothing is lost if they close the app
+    try{ localStorage.setItem('hw-pending', JSON.stringify(payload)); }catch(_){}
+    setSyncStatus('error');
+    if(saveRetries < 4){
+      saveRetries++;
+      setTimeout(saveToCloud, 1000 * Math.pow(2, saveRetries)); // 2s,4s,8s,16s
+    } else {
+      showToast("Can't reach the server — saved on this device");
+    }
+    return false;
+  }
+}
+
+// Push up anything that failed to save last session
+async function flushPendingSave(){
+  const raw = localStorage.getItem('hw-pending');
+  if(!raw || !currentUser) return;
+  try{
+    const payload = JSON.parse(raw);
+    if(payload.user_id !== currentUser.id){ localStorage.removeItem('hw-pending'); return; }
+    const {error} = await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+    if(!error){ localStorage.removeItem('hw-pending'); setSyncStatus('synced'); }
+  }catch(e){ console.error('Flush failed:', e); }
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(saveToCloud, 1500);
+}
+
+function setSyncStatus(st){
+  const d = document.getElementById('syncDot');
+  if(!d) return;
+  d.className = 'sync-dot ' + st;
+  d.title = st==='synced' ? 'All changes saved'
+          : st==='saving' ? 'Saving…'
+          : "Not saved — we'll keep trying";
+}
+function setSyncDot(s){ setSyncStatus(s ? 'synced' : 'saving'); }
+
+// ── Init ─────────────────────────────────────────────────────
+async function initApp(user) {
+  currentUser = user;
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  if(pinIsSet()){ showPinScreen('verify'); }
+  else { document.getElementById('app').style.display='flex'; }
+  document.getElementById('userEmail').textContent = user.email;
+
+  await loadFromCloud();
+
+  if(state.todayDate !== state.today) {
+    state.done=[false,false]; state.todayDate=state.today;
+    state.todayPair=null; state.daysUsed++;
+  }
+  if(!state.todayPair) pickPair();
+
+  renderAll();
+}
+
+function renderAll() {
+  renderHome(); renderStreak(); renderNotes(); renderDates(); renderReminders();
+  renderCustomHabits(); renderDateIdeas(); renderGifts(); renderPinSetting();
+  renderProfile(); renderNudges(); renderSayIt(); renderSelfCare();
+  flushPendingSave();
+}
+
+// ── Habits ────────────────────────────────────────────────────
+// All habits = built-ins (b0..bN) + user's custom ones (stable ids)
+function allHabits() {
+  const built = builtinHabits.map((hb,i)=>({id:'b'+i, ...hb, custom:false}));
+  const custom = state.customHabits.map(hb=>({...hb, custom:true}));
+  return [...built, ...custom];
+}
+function habitById(id) {
+  if(typeof id === 'number') id = 'b'+id;        // legacy saves
+  return allHabits().find(h=>h.id===id) || null;
+}
+
+function pickPair() {
+  const all = allHabits();
+  const usedIds = state.usedHabits.map(u=>typeof u==='number'?'b'+u:u);
+  let avail = all.filter(h=>!usedIds.includes(h.id));
+  if(avail.length<2){ state.usedHabits=[]; avail=all; }
+  const shuffled = [...avail].sort(()=>Math.random()-0.5);
+  state.todayPair = shuffled.slice(0,2).map(h=>h.id);
+  state.usedHabits = [...usedIds,...state.todayPair].slice(-14);
+}
+
+function refreshHabits() {
+  state.done=[false,false]; pickPair(); renderHome(); renderStreak();
+  scheduleSave(); showToast("New habits picked ✓");
+}
+
+function toggleDone(idx) {
+  state.done[idx]=!state.done[idx];
+  if(state.done[idx]) state.totalDone++; else if(state.totalDone>0) state.totalDone--;
+  if(state.done[0]&&state.done[1]) { updateStreak(); showToast("Both done! She's lucky to have you 💕"); }
+  renderHome(); renderStreak(); scheduleSave();
+}
+
+function updateStreak() {
+  if(state.lastStreakDay===state.today) return;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  state.streak = state.lastStreakDay===yesterday.toDateString() ? state.streak+1 : 1;
+  state.bestStreak = Math.max(state.bestStreak, state.streak);
+  state.lastStreakDay = state.today;
+  state.history = [{date:state.today,done:true},...state.history].slice(0,30);
+}
+
+function renderHome() {
+  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('heroStreak').textContent = state.streak+(state.streak===1?' day streak':' day streak');
+  const container = document.getElementById('habitCards');
+  container.innerHTML='';
+  if(!state.todayPair) return;
+  state.todayPair.forEach((hi,idx)=>{
+    const h=habitById(hi); if(!h) return;
+    const done=state.done[idx];
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div class="habit-item"><div class="habit-check ${done?'checked':''}" onclick="toggleDone(${idx})"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div class="habit-text"><div class="habit-title ${done?'done':''}">${esc(h.title)}</div><div class="habit-desc">${esc(h.desc)}</div><div class="habit-time">${esc(h.time)}</div></div></div>`;
+    container.appendChild(card);
+  });
+}
+
+// ── Streak ────────────────────────────────────────────────────
+function renderStreak() {
+  document.getElementById('bigStreak').textContent=state.streak;
+  document.getElementById('statTotal').textContent=state.totalDone;
+  document.getElementById('statBest').textContent=state.bestStreak;
+  document.getElementById('statDays').textContent=state.daysUsed;
+  document.getElementById('statDoneToday').textContent=state.done.filter(Boolean).length+'/2';
+  const list=document.getElementById('historyList');
+  if(!state.history.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:20px">No history yet — complete both habits today!</div>';return;}
+  list.innerHTML=state.history.slice(0,7).map(h=>`<div class="card card-sm" style="display:flex;align-items:center;gap:12px"><span style="font-size:18px">${h.done?'✅':'⬜'}</span><span style="font-size:14px;color:var(--navy)">${new Date(h.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</span><span style="margin-left:auto;font-size:12px;font-weight:700;color:${h.done?'var(--coral)':'var(--muted)'}">${h.done?'Complete':'Missed'}</span></div>`).join('');
+}
+
+// ── Notes ─────────────────────────────────────────────────────
+function switchNoteTab(tab,btn) {
+  currentNoteTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('noteInput').placeholder=tab==='compliments'?'Add a compliment...':tab==='love'?'I love that you...':'Add a custom note...';
+  renderNotes();
+}
+function addNote() {
+  const input=document.getElementById('noteInput');
+  const text=input.value.trim();
+  if(!text){showToast("Type something first");return;}
+  state.notes[currentNoteTab]=[text,...state.notes[currentNoteTab]];
+  input.value=''; renderNotes(); scheduleSave(); showToast("Note saved ❤️");
+}
+function deleteNote(tab,idx){state.notes[tab].splice(idx,1);renderNotes();scheduleSave();}
+function showRandom(){
+  const all=[...state.notes.compliments,...state.notes.love,...state.notes.custom];
+  if(!all.length){showToast("Add some notes first!");return;}
+  const r=all[Math.floor(Math.random()*all.length)];
+  const el=document.getElementById('randomResult');
+  el.textContent='"'+r+'"'; el.style.display='block';
+}
+function renderNotes(){
+  const list=document.getElementById('notesList');
+  const notes=state.notes[currentNoteTab];
+  const label=currentNoteTab==='compliments'?'Compliment':currentNoteTab==='love'?'I love that...':'Note';
+  if(!notes.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No notes yet — add one above!</div>';return;}
+  list.innerHTML=notes.map((n,i)=>`<div class="note-card"><div class="note-body"><div class="note-tag">${esc(label)}</div><div class="note-text">${esc(n)}</div></div><span class="note-del" onclick="deleteNote('${currentNoteTab}',${i})">×</span></div>`).join('');
+}
+
+// ── Dates ─────────────────────────────────────────────────────
+function addDate(){
+  const name=document.getElementById('dateName').value.trim();
+  const val=document.getElementById('dateVal').value;
+  const type=document.getElementById('dateType').value;
+  const repeat=document.getElementById('dateRepeat').value==='1';
+  if(!name||!val){showToast("Fill in name and date");return;}
+  state.dates.push({name,val,type,repeat});
+  document.getElementById('dateName').value='';
+  document.getElementById('dateVal').value='';
+  renderDates(); scheduleSave(); showToast("Date saved 📅");
+}
+function deleteDate(idx){state.dates.splice(idx,1);renderDates();scheduleSave();}
+function daysUntil(dateStr,repeat){
+  const now=new Date();now.setHours(0,0,0,0);
+  let d=new Date(dateStr+'T00:00:00');
+  if(repeat){d.setFullYear(now.getFullYear());if(d<now)d.setFullYear(now.getFullYear()+1);}
+  const diff=Math.round((d-now)/86400000);
+  if(diff===0)return'🎉 Today!';if(diff===1)return'Tomorrow';if(diff<0)return repeat?'':'Passed';
+  return'In '+diff+' days';
+}
+function renderDates(){
+  const list=document.getElementById('datesList');
+  if(!state.dates.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:24px">No dates saved yet</div>';return;}
+  const sorted=[...state.dates].map((d,i)=>({...d,i})).sort((a,b)=>{
+    const now=new Date();now.setHours(0,0,0,0);
+    const da=new Date(a.val+'T00:00:00'),db=new Date(b.val+'T00:00:00');
+    if(a.repeat){da.setFullYear(now.getFullYear());if(da<now)da.setFullYear(now.getFullYear()+1);}
+    if(b.repeat){db.setFullYear(now.getFullYear());if(db<now)db.setFullYear(now.getFullYear()+1);}
+    return da-db;
+  });
+  list.innerHTML=sorted.map(d=>{
+    const disp=new Date(d.val+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:d.repeat?undefined:'numeric'});
+    const cnt=daysUntil(d.val,d.repeat);
+    return`<div class="date-item"><div class="date-icon">${esc(d.type)}</div><div class="date-info"><div class="date-name">${esc(d.name)}</div><div class="date-when">${esc(disp)}${d.repeat?' · every year':''}</div>${cnt?`<div class="date-countdown">${cnt}</div>`:''}</div><span class="date-del" onclick="deleteDate(${d.i})">×</span></div>`;
+  }).join('');
+}
+
+// ── Reminders ─────────────────────────────────────────────────
+function toggleReminder(key){state.reminders[key]=!state.reminders[key];renderReminders();}
+function renderReminders(){
+  ['morning','evening','dates'].forEach(k=>{
+    const btn=document.getElementById('toggle'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(btn)btn.className='toggle'+(state.reminders[k]?' on':'');
+  });
+  document.getElementById('morningTime').value=state.reminders.morningTime||'08:00';
+  document.getElementById('eveningTime').value=state.reminders.eveningTime||'20:00';
+}
+async function saveReminders(){
+  state.reminders.morningTime=document.getElementById('morningTime').value;
+  state.reminders.eveningTime=document.getElementById('eveningTime').value;
+  await saveToCloud(); showToast("Settings saved ✓");
+}
+
+// ── Custom habits ─────────────────────────────────────────────
+function addCustomHabit(){
+  const t=document.getElementById('chTitle').value.trim();
+  const d=document.getElementById('chDesc').value.trim();
+  const tm=document.getElementById('chTime').value.trim();
+  if(!t){showToast("Give the habit a name");return;}
+  state.customHabits.push({id:'c'+Date.now(),title:t,desc:d||'Your own habit.',time:tm||'Anytime'});
+  document.getElementById('chTitle').value='';
+  document.getElementById('chDesc').value='';
+  document.getElementById('chTime').value='';
+  renderCustomHabits(); scheduleSave(); showToast("Habit added ✓");
+}
+function deleteCustomHabit(id){
+  state.customHabits=state.customHabits.filter(h=>h.id!==id);
+  state.usedHabits=state.usedHabits.filter(u=>u!==id);
+  if(state.todayPair && state.todayPair.includes(id)){ state.done=[false,false]; pickPair(); renderHome(); }
+  renderCustomHabits(); scheduleSave();
+}
+function renderCustomHabits(){
+  const el=document.getElementById('customHabitList'); if(!el) return;
+  if(!state.customHabits.length){el.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:16px">No custom habits yet</div>';return;}
+  el.innerHTML=state.customHabits.map(hb=>`<div class="note-card"><div class="note-body"><div class="note-tag">Your habit</div><div class="note-text" style="font-weight:600">${esc(hb.title)}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(hb.desc)} · ${esc(hb.time)}</div></div><span class="note-del" onclick="deleteCustomHabit('${hb.id}')">×</span></div>`).join('');
+}
+
+// ── Saying it / Self-care cards ───────────────────────────────
+function renderCards(targetId, rows, prefix){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  el.innerHTML = rows.map((r,i)=>
+    '<div class="info-card" id="'+prefix+i+'">'+
+      '<div class="info-head" onclick="toggleCard(\''+prefix+i+'\')">'+
+        '<div class="info-title">'+esc(r.t)+'</div>'+
+        '<span class="info-chev">\u203a</span>'+
+      '</div>'+
+      '<div class="info-body">'+
+        '<p>'+esc(r.b)+'</p>'+
+        (r.n ? '<p class="info-do">'+esc(r.n)+'</p>' : '')+
+      '</div>'+
+    '</div>').join('');
+}
+function toggleCard(id){
+  const c = document.getElementById(id);
+  if(c) c.classList.toggle('open');
+}
+function renderSayIt(){ renderCards('sayList', SAY_IT, 'say'); }
+function renderSelfCare(){ renderCards('careList', SELF_CARE, 'care'); }
+
+// ── Her profile ───────────────────────────────────────────────
+const SAY_IT = [
+  {t:"The first minute decides the rest",b:"Gottman's team watched couples argue and predicted divorce from the first three minutes. Conversations end roughly where they start. Open with blame and it ends in blame, even when you were right about the thing.",n:"What changes it: name the thing that happened, say how it landed, say what you're asking for. The words are yours to pick."},
+  {t:"\u201cYou always\u201d and \u201cyou never\u201d end it before it starts",b:"Those go at who she is rather than what happened. The automatic reply is defending herself, so now you're arguing about the accusation instead of the problem.",n:"Swap the global for the specific thing, this week, that you actually want different."},
+  {t:"Contempt is the one that does lasting damage",b:"Eye-rolling, sarcasm, mocking her, name-calling. Of everything Gottman measured, this predicted divorce most strongly. It isn't something to do more carefully.",n:"If it's already in how you talk to each other, that's worth real help, not a better opening line."},
+  {t:"Raise it while it's still small",b:"Waiting until you're furious means the opening is harsh before you've said anything. The complaint has had three weeks to turn into a case.",n:"Earlier and smaller is easier for both of you."},
+  {t:"Timing beats wording",b:"The minute you walk in, the middle of bedtime, half eleven at night. The best-phrased thing in the world lands badly then.",n:"You can ask when's a good time. That question is part of the conversation, not a delay."},
+  {t:"Notice what she's reaching for",b:"Gottman calls them bids \u2014 she mentions something, shows you something, sighs at the table. Couples still together after six years turned toward them 86% of the time. The ones who divorced, 33%.",n:"Turning toward can be one word. It doesn't have to be a conversation."},
+  {t:"Fix it early, badly if necessary",b:"A joke, a hand on her arm, saying out loud that you're getting heated. Gottman found the couples who do well aren't the ones who don't fight. They're the ones who climb down sooner.",n:"A clumsy repair that she accepts beats a well-made point."},
+  {t:"Ask whether she wants it solved",b:"Jumping to fixing when she wanted to be heard reads as not caring. Listening when she wanted help reads as doing nothing. You can't tell from outside which one it is.",n:"So ask. It takes one sentence."},
+  {t:"An apology with a second half isn't one",b:"Anything after \u201cbut\u201d deletes what came before it.",n:"Stop at the apology. The explanation can come another time, if it's still needed."},
+  {t:"When it's gone wrong, stop",b:"Once your heart's going, nothing is getting in. Gottman found people in that state can't take in new information, so carrying on only adds things you'll both have to walk back.",n:"Twenty minutes minimum, and actually settle in that time rather than rehearsing your side."}
+];
+const SELF_CARE = [
+  {t:"She probably shouldn't be your only outlet",b:"Research keeps finding the same split: women hold wider circles of family and friends, men lean on their wife and not much else. One study found 19% of separated or divorced men reported a drop in social support, against 11% of women.",n:"If she's the only person you talk to properly, that's weight on the marriage and one point of failure. Not a flaw in either of you. Worth fixing anyway."},
+  {t:"You'll help a friend long before you'll ask one",b:"This turns up repeatedly in the research. Men are much readier to offer than to ask, partly from not wanting to be a burden. Around 40% of men have never discussed their mental health with anyone at all.",n:"The person you'd drop everything for would probably do the same. You just haven't tested it."},
+  {t:"You may already have the structure",b:"Research on weak ties \u2014 regular low-intensity contact with people who aren't close friends \u2014 finds it does real work for wellbeing. A daily minyan, a chavrusa, a shiur you turn up to every week is exactly that shape.",n:"The thing that helps is showing up regularly, not what you say while you're there."},
+  {t:"Moving does more than it sounds like it should",b:"A 2024 BMJ review of exercise trials for depression found moderate effects, with walking or jogging among the clearer ones. Being straight with you: that review has been criticised for coding errors, so treat it as genuinely helpful rather than a treatment.",n:"Thirty minutes of walking most days is the version almost everyone can actually do."},
+  {t:"Sleep is usually the cheapest lever",b:"Short sleep and low mood feed each other, and it's hard to say which started it. It's also the one most people trade away first when things get busy.",n:"If you only change one thing this month, a consistent bedtime is the one with the best odds."},
+  {t:"It often shows up as anger, not sadness",b:"Depression in men frequently presents as irritability, pulling away, working later, drinking more, a short fuse with the kids. Men report feeling low less often than women do \u2014 whether they feel it less is a separate question.",n:"If your wife has said you've been snappy for months, that's information, not an attack."},
+  {t:"One honest conversation a month",b:"Not a support group and not therapy. One person who gets a real answer when they ask how you are.",n:"A brother, a friend from yeshiva, your rav. Once a month is a low enough bar to actually clear."},
+  {t:"Where this stops being self-care",b:"If most weeks are bad rather than most days are fine, if you're drinking to get through evenings, if you've stopped wanting things you used to want, or if you've had thoughts of hurting yourself \u2014 none of that is fixed by a walk and an earlier bedtime.",n:"Talk to your doctor, a therapist, or your rav. In the US you can call or text 988 any time. Reaching out early is the whole point and nobody has ever regretted it."}
+];
+
+const INTERESTS = [["cooking","Cooking"],["reading","Reading"],["learning","Learning"],
+  ["outdoors","Outdoors"],["music","Music"],["making","Making things"],
+  ["home","The house"],["quiet","Quiet"],["going_out","Going out"]];
+
+function blankProfile(){ return {place:'',budget:'',time:'',kids:'',car:'1',interests:[],pauseContact:false}; }
+function profile(){ const p = state.profile || blankProfile(); if(!p.interests) p.interests=[]; return p; }
+function profileAnswered(){
+  const p = state.profile; if(!p) return false;
+  return !!(p.place||p.budget||p.time||p.kids||(p.interests&&p.interests.length));
+}
+function renderProfile(){
+  const p = profile();
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set('pfPlace',p.place); set('pfBudget',p.budget); set('pfTime',p.time);
+  set('pfKids',p.kids); set('pfCar',p.car);
+  const box=document.getElementById('pfInterests');
+  if(box) box.innerHTML = INTERESTS.map(([k,l])=>
+    '<button class="chip '+(p.interests.includes(k)?'active':'')+'" onclick="toggleInterest(\''+k+'\')">'+l+'</button>').join('');
+  const t=document.getElementById('togglePause');
+  if(t) t.className='toggle'+(p.pauseContact?' on':'');
+}
+function toggleInterest(k){
+  const p = profile();
+  p.interests = p.interests.includes(k) ? p.interests.filter(x=>x!==k) : [...p.interests,k];
+  state.profile = p; renderProfile();
+}
+function saveProfile(){
+  const g=id=>{ const el=document.getElementById(id); return el?el.value:''; };
+  const p = profile();
+  p.place=g('pfPlace'); p.budget=g('pfBudget'); p.time=g('pfTime');
+  p.kids=g('pfKids'); p.car=g('pfCar');
+  state.profile=p; scheduleSave();
+  renderDateIdeas(); renderNudges();
+  showToast("Saved — suggestions will fit better now");
+}
+function togglePauseContact(){
+  const p = profile();
+  p.pauseContact = !p.pauseContact;
+  state.profile = p; renderProfile(); renderDateIdeas(); scheduleSave();
+}
+function renderNudges(){
+  const msg = profileAnswered() ? '' :
+    '<div class="nudge" onclick="openProfile()">Tell the app a bit about her and these get a lot better. <b>Set it up</b></div>';
+  const a=document.getElementById('profileNudge'), b=document.getElementById('giftNudge');
+  if(a) a.innerHTML=msg;
+  if(b) b.innerHTML=msg;
+}
+function openProfile(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-profile').classList.add('active');
+  document.getElementById('screen-area').scrollTop=0;
+  renderProfile();
+}
+
+// ── Ranking ideas against her profile and your ratings ────────
+function allDateIdeas(){
+  const custom = state.customDates.map(c=>({id:c.id, t:c.t, cat:'mine', cost:0, time:1, place:'', kids:0, contact:0, car:0, custom:true}));
+  return dateIdeas.concat(custom);
+}
+function ideaAllowed(i){
+  const p = profile();
+  if(i.contact && p.pauseContact) return false;
+  if(i.kids && p.kids==='0') return false;
+  if(i.car && p.car==='0') return false;
+  return true;
+}
+function scoreIdea(i){
+  const p = profile();
+  let s = 0;
+  if(p.place && i.place === p.place) s += 3;
+  if(p.budget !== '' && i.cost <= Number(p.budget)) s += 2;
+  if(p.budget !== '' && i.cost >  Number(p.budget)) s -= 4;
+  if(p.time !== '' && i.time <= Number(p.time)) s += 2;
+  if(p.time !== '' && i.time >  Number(p.time)) s -= 3;
+  if(i.kids && p.kids === '1') s += 2;
+  const r = state.ratings[i.id];
+  if(r) s += (r - 3) * 2.5;
+  if(r === undefined) s += 1;
+  return s + Math.random() * 1.5;
+}
+function starRow(id, r, size){
+  let out='';
+  for(let n=1;n<=5;n++) out += '<span class="star '+(size||'')+' '+(r>=n?'on':'')+'" onclick="rateIdea(\''+id+'\','+n+')">\u2605</span>';
+  return out;
+}
+function rollDateIdea(){
+  const pool = allDateIdeas().filter(ideaAllowed);
+  if(!pool.length){ showToast("Nothing matches — try widening her profile"); return; }
+  const ranked = pool.map(i=>({i,s:scoreIdea(i)})).sort((a,b)=>b.s-a.s).slice(0,6);
+  const pick = ranked[Math.floor(Math.random()*ranked.length)].i;
+  const r = state.ratings[pick.id];
+  const box = document.getElementById('dateResult');
+  box.style.display='block';
+  box.innerHTML =
+    '<div class="suggest-text">'+esc(pick.t)+'</div>'+
+    '<div class="suggest-meta">'+esc(dateCategoryLabels[pick.cat]||'Your own idea')+(r?' \u00b7 you rated this '+r+'\u2605':'')+'</div>'+
+    '<div class="suggest-actions"><span class="suggest-label">Would you do it again?</span>'+starRow(pick.id, r)+'</div>';
+}
+function rateIdea(id,n){
+  state.ratings[id] = n;
+  scheduleSave();
+  renderDateIdeas();
+  const box=document.getElementById('dateResult');
+  if(box && box.style.display!=='none'){
+    box.querySelectorAll('.star').forEach((s,idx)=>s.classList.toggle('on', idx < n));
+  }
+  showToast(n>=4 ? "Noted — more like this" : n<=2 ? "Noted — won't push this one" : "Noted");
+}
+
+// ── Browse ────────────────────────────────────────────────────
+let currentDateCat='out';
+function setDateCat(c){ currentDateCat=c; renderDateIdeas(); }
+function renderDateIdeas(){
+  const chips=document.getElementById('dateChips');
+  if(!chips) return;
+  const p = profile();
+  const cats = Object.keys(dateCategoryLabels).filter(c=>{
+    if(c==='contact' && p.pauseContact) return false;
+    if(c==='kids' && p.kids==='0') return false;
+    return true;
+  });
+  if(cats.indexOf(currentDateCat)===-1) currentDateCat = cats[0];
+  chips.innerHTML = cats.map(c=>'<button class="chip '+(c===currentDateCat?'active':'')+'" onclick="setDateCat(\''+c+'\')">'+esc(dateCategoryLabels[c])+'</button>').join('');
+  const list = dateIdeas.filter(i=>i.cat===currentDateCat && ideaAllowed(i));
+  document.getElementById('dateList').innerHTML = list.length ? list.map(i=>
+    '<div class="card card-sm idea-row"><div class="idea-text">'+esc(i.t)+'</div>'+
+    '<div class="idea-stars">'+starRow(i.id, state.ratings[i.id], 'sm')+'</div></div>').join('')
+    : '<div class="empty">Nothing here with your current settings.</div>';
+  renderCustomDates();
+  renderNudges();
+}
+
+// ── Your own date ideas ───────────────────────────────────────
+function addCustomDate(){
+  const el=document.getElementById('customDateInput');
+  const t=el.value.trim();
+  if(!t){ showToast("Type an idea first"); return; }
+  state.customDates.unshift({id:'cd'+Date.now(), t:t});
+  el.value=''; renderCustomDates(); scheduleSave(); showToast("Added");
+}
+function deleteCustomDate(id){
+  state.customDates = state.customDates.filter(c=>c.id!==id);
+  delete state.ratings[id];
+  renderCustomDates(); scheduleSave();
+}
+function renderCustomDates(){
+  const el=document.getElementById('customDateList');
+  if(!el) return;
+  if(!state.customDates.length){ el.innerHTML='<div class="empty">Nothing yet. Add the things that actually work for you.</div>'; return; }
+  el.innerHTML = state.customDates.map(c=>
+    '<div class="note-card"><div class="note-body"><div class="note-text">'+esc(c.t)+'</div>'+
+    '<div class="idea-stars" style="margin-top:6px">'+starRow(c.id, state.ratings[c.id], 'sm')+'</div></div>'+
+    '<span class="note-del" onclick="deleteCustomDate(\''+c.id+'\')">\u00d7</span></div>').join('');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+let currentIdeaTab='date';
+function switchIdeaTab(tab,btn){
+  currentIdeaTab=tab;
+  document.querySelectorAll('#screen-ideas .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('idea-date').style.display = tab==='date'?'':'none';
+  document.getElementById('idea-gift').style.display = tab==='gift'?'':'none';
+  document.getElementById('idea-say').style.display  = tab==='say'?'':'none';
+  if(tab==='say') renderSayIt();
+  renderNudges();
+}
+
+// ── Gift ideas built from her profile ─────────────────────────
+function generateGifts(){
+  const budget = Number(document.getElementById('giftBudget').value);
+  const occasion = document.getElementById('giftFor').value;
+  const ints = profile().interests;
+  const ranked = giftBank.filter(g=>g.b <= budget).map(g=>{
+    let s=0;
+    const matches = g.ints.some(x=>ints.indexOf(x)!==-1);
+    if(g.ints.length===0) s += 1;
+    if(matches) s += 5;
+    if(g.ints.length && !matches) s -= 6;
+    if(g.b === budget) s += 1;
+    return {g:g, s:s + Math.random()*1.5};
+  }).sort((a,b)=>b.s-a.s).slice(0,5).map(x=>x.g);
+  const box=document.getElementById('giftIdeas');
+  if(!ranked.length){ box.innerHTML='<div class="empty">Nothing at that budget. Try raising it.</div>'; return; }
+  box.innerHTML = '<div class="section-label">For '+esc(occasion.toLowerCase())+'</div>' + ranked.map(g=>
+    '<div class="card card-sm"><div class="idea-text">'+esc(g.t)+'</div>'+
+    (g.n ? '<div class="gift-note">'+esc(g.n)+'</div>' : '')+
+    '<button class="gift-save" onclick="saveSuggestedGift(this)" data-t="'+esc(g.t)+'" data-o="'+esc(occasion)+'">Add to my list</button></div>').join('')
+    + (profileAnswered() ? '' : '<div class="empty">These stay generic until you fill in what she likes.</div>');
+}
+function saveSuggestedGift(btn){
+  state.gifts.unshift({id:'g'+Date.now(), name:btn.getAttribute('data-t'), occasion:btn.getAttribute('data-o'), note:'', got:false});
+  renderGifts(); scheduleSave(); showToast("Added to your list");
+}
+
+// ── Gift list ─────────────────────────────────────────────────
+function addGift(){
+  const n=document.getElementById('giftName').value.trim();
+  const o=document.getElementById('giftOccasion').value;
+  const note=document.getElementById('giftNote').value.trim();
+  if(!n){ showToast("What's the gift idea?"); return; }
+  state.gifts.unshift({id:'g'+Date.now(), name:n, occasion:o, note:note, got:false});
+  document.getElementById('giftName').value='';
+  document.getElementById('giftNote').value='';
+  renderGifts(); scheduleSave(); showToast("Added to your list");
+}
+function toggleGift(id){
+  const g=state.gifts.find(x=>x.id===id); if(g) g.got=!g.got;
+  renderGifts(); scheduleSave();
+}
+function deleteGift(id){
+  state.gifts=state.gifts.filter(g=>g.id!==id); renderGifts(); scheduleSave();
+}
+function renderGifts(){
+  const el=document.getElementById('giftList');
+  if(!el) return;
+  if(!state.gifts.length){ el.innerHTML='<div class="empty">Nothing on your list yet. Add things as she mentions them.</div>'; return; }
+  el.innerHTML=state.gifts.map(g=>
+    '<div class="note-card"><div class="habit-check '+(g.got?'checked':'')+'" style="margin-top:2px" onclick="toggleGift(\''+g.id+'\')">'+
+    '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+    '<div class="note-body"><div class="note-tag">'+esc(g.occasion)+'</div>'+
+    '<div class="note-text" style="'+(g.got?'text-decoration:line-through;opacity:0.5':'')+'">'+esc(g.name)+'</div>'+
+    (g.note?'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+esc(g.note)+'</div>':'')+'</div>'+
+    '<span class="note-del" onclick="deleteGift(\''+g.id+'\')">\u00d7</span></div>').join('');
+}
+
+// ── PIN lock ──────────────────────────────────────────────────
+// A privacy lock for this device, not account security. The PIN is hashed
+// and stored locally; the real protection on the data is the login itself.
+let pinBuf = '', pinMode = 'verify', pinFirst = '', lastHidden = 0;
+
+function pinKey(){ return 'hw-pin-' + (currentUser ? currentUser.id : 'x'); }
+function pinIsSet(){ try{ return !!localStorage.getItem(pinKey()); }catch(e){ return false; } }
+
+async function hashPin(pin){
+  const raw = new TextEncoder().encode((currentUser ? currentUser.id : '') + ':' + pin);
+  const buf = await crypto.subtle.digest('SHA-256', raw);
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function drawPinDots(){
+  document.querySelectorAll('#pinDots i').forEach((d,i)=>d.classList.toggle('on', i < pinBuf.length));
+}
+function pinError(msg){
+  document.getElementById('pinErr').textContent = msg;
+  const dots = document.getElementById('pinDots');
+  dots.classList.add('shake');
+  setTimeout(()=>dots.classList.remove('shake'), 400);
+  pinBuf=''; drawPinDots();
+}
+
+function showPinScreen(mode){
+  pinMode = mode; pinBuf=''; pinFirst='';
+  const head=document.getElementById('pin-heading'), sub=document.getElementById('pin-sub'),
+        cancel=document.getElementById('pinCancel'), forgot=document.querySelector('.pin-forgot');
+  if(mode==='set'){ head.textContent='Choose a PIN'; sub.textContent='Four digits. You can turn this off later.'; cancel.textContent='Cancel'; forgot.style.display='none'; }
+  else if(mode==='confirm'){ head.textContent='Enter it again'; sub.textContent='Just to be sure'; cancel.textContent='Cancel'; forgot.style.display='none'; }
+  else if(mode==='remove'){ head.textContent='Enter your PIN'; sub.textContent='To turn the lock off'; cancel.textContent='Cancel'; forgot.style.display='none'; }
+  else { head.textContent='Enter your PIN'; sub.textContent='Keeps your notes private on this device'; cancel.textContent=''; forgot.style.display=''; }
+  document.getElementById('pinErr').textContent='';
+  drawPinDots();
+  document.getElementById('pin-screen').style.display='flex';
+  document.getElementById('splash').style.display='none';
+}
+function hidePinScreen(){ document.getElementById('pin-screen').style.display='none'; }
+
+async function pinPress(d){
+  if(pinBuf.length>=4) return;
+  pinBuf += d; drawPinDots();
+  if(pinBuf.length===4){ setTimeout(submitPin, 140); }
+}
+function pinBack(){ pinBuf = pinBuf.slice(0,-1); drawPinDots(); }
+
+async function submitPin(){
+  const entered = pinBuf;
+  if(pinMode==='set'){
+    pinFirst = entered; pinBuf=''; drawPinDots();
+    showPinScreenKeepFirst();
+    return;
+  }
+  if(pinMode==='confirm'){
+    if(entered !== pinFirst){ pinMode='set'; pinFirst=''; pinError("Those didn't match. Start again."); 
+      document.getElementById('pin-heading').textContent='Choose a PIN'; return; }
+    try{ localStorage.setItem(pinKey(), await hashPin(entered)); }catch(e){}
+    hidePinScreen(); renderPinSetting(); showToast("PIN set");
+    return;
+  }
+  const stored = localStorage.getItem(pinKey());
+  const match = stored && stored === await hashPin(entered);
+  if(!match){ pinError("Wrong PIN"); return; }
+  if(pinMode==='remove'){
+    try{ localStorage.removeItem(pinKey()); }catch(e){}
+    hidePinScreen(); renderPinSetting(); showToast("PIN turned off");
+  } else {
+    hidePinScreen();
+    document.getElementById('app').style.display='flex';
+  }
+}
+
+function showPinScreenKeepFirst(){
+  pinMode='confirm';
+  document.getElementById('pin-heading').textContent='Enter it again';
+  document.getElementById('pin-sub').textContent='Just to be sure';
+  document.getElementById('pinErr').textContent='';
+}
+
+function cancelPinSetup(){
+  if(pinMode==='verify') return;
+  hidePinScreen();
+  document.getElementById('app').style.display='flex';
+  renderPinSetting();
+}
+
+function forgotPin(){
+  if(!confirm("Sign out to reset your PIN?\n\nYour streak and notes are saved to your account, so nothing is lost. Sign back in and you can set a new PIN.")) return;
+  try{ localStorage.removeItem(pinKey()); }catch(e){}
+  hidePinScreen();
+  signOut();
+}
+
+function togglePinSetting(){
+  if(pinIsSet()) showPinScreen('remove');
+  else showPinScreen('set');
+}
+function renderPinSetting(){
+  const btn=document.getElementById('togglePin');
+  if(btn) btn.className = 'toggle' + (pinIsSet() ? ' on' : '');
+  const ch=document.getElementById('changePinBtn');
+  if(ch) ch.style.display = pinIsSet() ? '' : 'none';
+}
+function changePin(){ showPinScreen('set'); }
+
+// Re-lock after being away for a while
+function maybeRelock(){
+  if(!currentUser || !pinIsSet()) return;
+  if(lastHidden && Date.now() - lastHidden > 60000){
+    document.getElementById('app').style.display='none';
+    showPinScreen('verify');
+  }
+}
+
+// ── Legal, export, account deletion ───────────────────────────
+const LEGAL = {
+  privacy: {
+    title: "Privacy policy",
+    body: `<p><em>Last updated: October 2026</em></p>
+<h4>What we collect</h4>
+<p>Only two things: the email address you sign up with, and whatever you choose to enter in the app — which habits you marked done, your streak, your love notes, special dates, gift ideas and custom habits.</p>
+<p>We do not collect your name, phone number, location, contacts or browsing activity. There is no analytics or tracking in this app, and no advertising.</p>
+<h4>Who can see it</h4>
+<p>Only you. Your data is locked to your account at the database level — no other user of this app can read it, and we have not built any feature that shows your entries to anyone else.</p>
+<p>The administrators of this app can technically access the database, as is true of any app. We only do so to fix a problem, and we do not read your notes for any other reason.</p>
+<h4>Where it is stored</h4>
+<p>On Supabase, a hosting provider, on servers in the United States. Your password is encrypted and is never visible to us. If you sign in with Google, we receive only your email address — never your Google password.</p>
+<h4>How long we keep it</h4>
+<p>Until you delete it. Deleting your account from the Settings screen removes your account and all your entries immediately and permanently. There is no recovery after that.</p>
+<h4>Your rights</h4>
+<p>You can download everything we hold about you at any time using "Download my data" in Settings, and you can delete all of it yourself from the same screen. You do not need to ask our permission or wait for us.</p>
+<h4>Children</h4>
+<p>This app is intended for married adults and is not directed at children.</p>
+<h4>Changes</h4>
+<p>If this policy changes in a way that matters, we will say so in the app rather than quietly update this page.</p>
+<h4>Contact</h4>
+<p>Questions about your data: office.kolishema@gmail.com</p>`
+  },
+  terms: {
+    title: "Terms of use",
+    body: `<p><em>Last updated: October 2026</em></p>
+<h4>What this is</h4>
+<p>A free tool from Koli Shema for building small daily habits in your marriage. That is all it is.</p>
+<h4>What this is not</h4>
+<p>This is not therapy, counselling, medical advice, or halachic guidance. It is a reminder app. If your marriage is in real difficulty, please speak to a qualified counsellor, a rav, or a trusted professional — an app cannot do that work.</p>
+<h4>Your account</h4>
+<p>Keep your password to yourself. You are responsible for what is entered under your account. Do not use the app to store anything you would not want sitting on a server.</p>
+<h4>Availability</h4>
+<p>The app is provided as-is and free of charge. We try to keep it running and your data safe, but we cannot promise it will never be unavailable or that data will never be lost. Do not treat it as your only record of anything important.</p>
+<h4>Content</h4>
+<p>The habits, date ideas and prompts are suggestions, nothing more. Use judgement about what fits your marriage and your standards.</p>
+<h4>Ending use</h4>
+<p>You can delete your account at any time from Settings. We may suspend accounts that are being used abusively.</p>
+<h4>Contact</h4>
+<p>office.kolishema@gmail.com</p>`
+  }
+};
+
+function openLegal(which){
+  const l = LEGAL[which];
+  document.getElementById('legal-title').textContent = l.title;
+  document.getElementById('legal-body').innerHTML = l.body;
+  document.getElementById('legal-modal').style.display = 'flex';
+}
+function closeLegal(){ document.getElementById('legal-modal').style.display='none'; }
+
+function exportData(){
+  const dump = {
+    exported: new Date().toISOString(),
+    email: currentUser?.email || '',
+    streak: state.streak, bestStreak: state.bestStreak, totalDone: state.totalDone,
+    daysUsed: state.daysUsed, history: state.history,
+    notes: state.notes, customHabits: state.customHabits,
+    specialDates: state.dates, gifts: state.gifts, reminders: state.reminders
+  };
+  const blob = new Blob([JSON.stringify(dump,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'happy-wife-my-data.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  showToast("Downloaded ✓");
+}
+
+async function deleteAccount(){
+  if(!confirm("Delete your account?\n\nThis removes your streak, notes, dates and gift list permanently. It cannot be undone.")) return;
+  if(!confirm("Last check — this is permanent. Delete everything?")) return;
+  try{
+    await sb.from('user_data').delete().eq('user_id', currentUser.id);
+    const {error} = await sb.rpc('delete_own_account');
+    localStorage.removeItem('hw-pending');
+    if(error){
+      await sb.auth.signOut();
+      alert("Your data has been deleted and you've been signed out.\n\nTo remove the login record itself, email office.kolishema@gmail.com and we'll clear it.");
+    } else {
+      await sb.auth.signOut();
+      alert("Your account and all data have been deleted.");
+    }
+    location.reload();
+  }catch(e){
+    console.error(e);
+    showToast("Couldn't delete — try again or email us");
+  }
+}
+
+// ── Nav & utils ───────────────────────────────────────────────
+function goTo(screen,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('screen-area').scrollTop=0;
+}
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+let booted = false;
+
+function showAuthScreen(){
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+// Restore an existing session on load BEFORE deciding what to show
+async function boot(){
+  try{
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user){ booted=true; await initApp(session.user); }
+    else { showAuthScreen(); }
+  }catch(e){ console.error(e); showAuthScreen(); }
+}
+
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='INITIAL_SESSION') return;              // boot() handles this
+  if(event==='TOKEN_REFRESHED') return;              // nothing to redraw
+  if(session?.user){
+    if(!booted || currentUser?.id !== session.user.id){
+      booted=true; await initApp(session.user);
+    }
+  } else if(event==='SIGNED_OUT'){
+    booted=false; currentUser=null; showAuthScreen();
+  }
+});
+
+// Re-check the session when the app comes back to the foreground
+// If the app sat open overnight, roll the day over properly
+async function checkDayRollover(){
+  if(!currentUser) return;
+  const realToday = new Date().toDateString();
+  if(state.today === realToday) return;
+  state.today = realToday;
+  if(state.todayDate !== realToday){
+    state.done = [false,false];
+    state.todayDate = realToday;
+    state.todayPair = null;
+    state.daysUsed++;
+    pickPair();
+    renderAll();
+    await saveToCloud();
+  }
+}
+
+document.addEventListener('visibilitychange', async ()=>{
+  if(document.visibilityState==='hidden'){ lastHidden = Date.now(); return; }
+  if(document.visibilityState==='visible' && currentUser){
+    maybeRelock();
+    sb.auth.getSession();
+    await checkDayRollover();
+    await flushPendingSave();
+  }
+});
+
+// Catch midnight even if the app is left in the foreground
+setInterval(checkDayRollover, 60000);
+
+// Last-chance save when the app is backgrounded or closed
+window.addEventListener('pagehide', ()=>{ if(pendingSave) saveToCloud(); });
+
+boot();
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
