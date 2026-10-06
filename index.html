@@ -885,12 +885,23 @@ async function signUp() {
   else err.style.color='green', err.textContent = 'Check your email to confirm your account!';
 }
 
-async function signInGoogle() {
-  const {error} = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + window.location.pathname }
-  });
-  if(error) { document.getElementById('login-err').textContent = error.message; }
+async function signInGoogle(){
+  const errEl = document.getElementById('login-err');
+  if(errEl) errEl.textContent = '';
+  try{
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname, skipBrowserRedirect: true }
+    });
+    if(error) throw error;
+    if(!data || !data.url) throw new Error('Could not start Google sign-in');
+    // navigate ourselves rather than leaving it to the library, so a service
+    // worker or an installed app window cannot swallow the redirect
+    window.location.assign(data.url);
+  }catch(e){
+    const m = e.message || 'Could not open Google. Try again.';
+    if(errEl) errEl.textContent = m; else alert(m);
+  }
 }
 
 async function resetPassword() {
