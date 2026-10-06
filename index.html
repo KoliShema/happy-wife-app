@@ -197,6 +197,12 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 .empty{font-size:13px;color:var(--muted);text-align:center;padding:20px}
 .lead{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
 .lead.small{font-size:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.picker{width:100%;border:1.5px solid var(--coral-tint);border-radius:12px;padding:13px 14px;
+  font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:var(--navy);background:white;outline:none;margin-bottom:12px}
+.picker:focus{border-color:var(--navy)}
+.pickcard{background:white;border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.pickcard p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:9px}
+.pickcard p:last-child{margin-bottom:0}
 .info-card{background:white;border:1px solid var(--border);border-radius:14px;margin-bottom:9px;overflow:hidden}
 .info-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
 .info-title{flex:1;font-size:14px;font-weight:600;color:var(--navy);line-height:1.4}
@@ -580,7 +586,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: true,        // refresh before it expires
     detectSessionInUrl: true,      // pick up the token after Google redirect
     storage: window.localStorage,
-    storageKey: 'happywife-auth',
+    storageKey: 'kolishema-auth',   // shared with the landing page and the other apps
     flowType: 'pkce'
   }
 });
@@ -1205,21 +1211,20 @@ function renderCustomHabits(){
 function renderCards(targetId, rows, prefix){
   const el = document.getElementById(targetId);
   if(!el) return;
-  el.innerHTML = rows.map((r,i)=>
-    '<div class="info-card" id="'+prefix+i+'">'+
-      '<div class="info-head" onclick="toggleCard(\''+prefix+i+'\')">'+
-        '<div class="info-title">'+esc(r.t)+'</div>'+
-        '<span class="info-chev">\u203a</span>'+
-      '</div>'+
-      '<div class="info-body">'+
-        '<p>'+esc(r.b)+'</p>'+
-        (r.n ? '<p class="info-do">'+esc(r.n)+'</p>' : '')+
-      '</div>'+
-    '</div>').join('');
+  el.innerHTML =
+    '<select class="picker" id="'+prefix+'Sel">' +
+      rows.map(function(r,i){ return '<option value="'+i+'">'+esc(r.t)+'</option>'; }).join('') +
+    '</select><div id="'+prefix+'Body"></div>';
+  document.getElementById(prefix+'Sel').onchange = function(){ showCard(prefix); };
+  showCard(prefix);
 }
-function toggleCard(id){
-  const c = document.getElementById(id);
-  if(c) c.classList.toggle('open');
+function showCard(prefix){
+  const rows = prefix==='say' ? SAY_IT : SELF_CARE;
+  const sel = document.getElementById(prefix+'Sel');
+  if(!sel) return;
+  const r = rows[Number(sel.value)];
+  document.getElementById(prefix+'Body').innerHTML =
+    '<div class="pickcard"><p>'+esc(r.b)+'</p>'+(r.n?'<p class="info-do">'+esc(r.n)+'</p>':'')+'</div>';
 }
 function renderSayIt(){ renderCards('sayList', SAY_IT, 'say'); }
 function renderSelfCare(){ renderCards('careList', SELF_CARE, 'care'); }
