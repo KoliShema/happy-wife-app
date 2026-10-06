@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Happy Wife">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231F1B56'/%3E%3Ctext y='.9em' font-size='80' text-anchor='middle' x='50'%3E%F0%9F%92%95%3C/text%3E%3C/svg%3E">
-<meta name="description" content="Daily habits to keep your wife happy.">
+<meta name="description" content="Happy Wife — two small things a day for your marriage. Part of Happy Relationships from Koli Shema.">
 <meta name="theme-color" content="#1F1B56">
 <link rel="manifest" href="manifest.json">
-<title>Happy Wife</title>
+<title>Happy Wife · Happy Relationships</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -26,6 +26,24 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 #splash{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000}
 .splash-heart{font-size:54px;animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}
+
+#quiz-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;z-index:997;
+  padding:calc(var(--safe-top) + 22px) 22px calc(var(--safe-bottom) + 18px)}
+.quiz-top{margin-bottom:26px}
+.quiz-bar{height:3px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden}
+.quiz-bar i{display:block;height:100%;background:var(--coral);width:0;transition:width .3s}
+.quiz-step{font-size:11px;color:var(--coral-tint);margin-top:9px;letter-spacing:.06em;text-transform:uppercase}
+.quiz-body{flex:1;overflow-y:auto}
+.quiz-body h2{color:white;font-size:21px;font-weight:700;line-height:1.3;margin-bottom:7px}
+.quiz-body p{color:var(--coral-tint);font-size:13px;line-height:1.5;margin-bottom:20px}
+.quiz-opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.2);
+  border-radius:13px;padding:14px 16px;margin-bottom:9px;color:white;font-family:'Poppins',sans-serif;font-size:14px;cursor:pointer}
+.quiz-opt:active{background:rgba(255,255,255,.17)}
+.quiz-opt.on{background:var(--coral);border-color:var(--coral)}
+.quiz-foot{display:flex;align-items:center;gap:12px;padding-top:16px}
+.quiz-back,.quiz-skip{background:none;border:none;color:var(--coral-tint);font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;padding:8px 0}
+.quiz-next{margin-left:auto;background:white;color:var(--navy);border:none;border-radius:11px;padding:11px 22px;
+  font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
 
 #pin-screen{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;z-index:998}
 .pin-lock{font-size:34px;margin-bottom:10px}
@@ -222,6 +240,23 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 
 <!-- Auth Screen -->
 <div id="splash"><div class="splash-heart">💕</div></div>
+
+<div id="quiz-screen" style="display:none">
+  <div class="quiz-top">
+    <div class="quiz-bar"><i id="quizBar"></i></div>
+    <div class="quiz-step" id="quizStep"></div>
+  </div>
+  <div class="quiz-body">
+    <h2 id="quizQ"></h2>
+    <p id="quizSub"></p>
+    <div id="quizOpts"></div>
+  </div>
+  <div class="quiz-foot">
+    <button class="quiz-back" onclick="quizBack()">Back</button>
+    <button class="quiz-skip" onclick="quizSkip()">Skip this</button>
+    <button class="quiz-next" id="quizNext" onclick="quizNext()" style="display:none">Next</button>
+  </div>
+</div>
 
 <div id="pin-screen" style="display:none">
   <div class="pin-lock">🔒</div>
@@ -482,7 +517,8 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
       </div>
       <div id="customHabitList"></div>
       <div class="section-label">Personalising</div>
-      <button class="signout-btn" onclick="openProfile()">About her — tune the suggestions</button>
+      <button class="signout-btn" onclick="retakeQuiz()">Run the setup questions again</button>
+      <button class="signout-btn" onclick="openProfile()">About her — edit the answers</button>
 
       <div class="section-label">Privacy</div>
       <div class="reminder-setting">
@@ -665,16 +701,16 @@ const dateIdeas = [
   {id:"dc323d521",cat:"shabbos",t:"Stay at the table after everyone's left",cost:0,time:0,place:"home",kids:0,contact:0,car:0},
   {id:"de4837b0e",cat:"shabbos",t:"Look at the parsha together before Shabbos so you both have something to say",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
   {id:"d28d9ae8c",cat:"shabbos",t:"Go visit someone together, just the two of you",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
-  {id:"db1013082",cat:"special",t:"Take her to where you got engaged",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
-  {id:"d5bea165b",cat:"special",t:"Plan something she doesn't have to organise any part of",cost:0,time:2,place:"home",kids:0,contact:0,car:0},
-  {id:"d924d51f6",cat:"special",t:"Clear her whole day, you handle everything",cost:0,time:2,place:"home",kids:0,contact:0,car:0},
+  {id:"db1013082",cat:"special",t:"Take her to where you got engaged",cost:0,time:1,place:"out",kids:0,contact:0,car:0,sur:1},
+  {id:"d5bea165b",cat:"special",t:"Plan something she doesn't have to organise any part of",cost:0,time:2,place:"home",kids:0,contact:0,car:0,sur:1},
+  {id:"d924d51f6",cat:"special",t:"Clear her whole day, you handle everything",cost:0,time:2,place:"home",kids:0,contact:0,car:0,sur:1},
   {id:"da2beb84e",cat:"special",t:"Write her a letter for your anniversary instead of buying something",cost:0,time:1,place:"home",kids:0,contact:0,car:0},
-  {id:"d98f7dbdf",cat:"special",t:"Recreate your first date as closely as you can remember it",cost:1,time:2,place:"out",kids:0,contact:0,car:0},
+  {id:"d98f7dbdf",cat:"special",t:"Recreate your first date as closely as you can remember it",cost:1,time:2,place:"out",kids:0,contact:0,car:0,sur:1},
   {id:"d38855c33",cat:"special",t:"Book a nice kosher restaurant for an anniversary",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
   {id:"d2163be06",cat:"special",t:"Shabbos away at a hotel or B&B",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
   {id:"d5f35abb7",cat:"special",t:"One night away, somewhere quiet",cost:2,time:2,place:"out",kids:0,contact:0,car:0},
   {id:"d5ef7f4f4",cat:"special",t:"Buy the thing she's been looking at for a year",cost:2,time:0,place:"home",kids:0,contact:0,car:0},
-  {id:"d00dd0c12",cat:"special",t:"Arrange the afternoon off for her and don't tell her what for",cost:1,time:1,place:"home",kids:0,contact:0,car:0},
+  {id:"d00dd0c12",cat:"special",t:"Arrange the afternoon off for her and don't tell her what for",cost:1,time:1,place:"home",kids:0,contact:0,car:0,sur:1},
   {id:"d84825f33",cat:"budget",t:"Coffee and a long walk",cost:1,time:1,place:"out",kids:0,contact:0,car:0},
   {id:"d377d75ec",cat:"budget",t:"Library date, read next to each other",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
   {id:"de13cf2cd",cat:"budget",t:"Free museum day",cost:0,time:1,place:"out",kids:0,contact:0,car:0},
@@ -964,6 +1000,7 @@ async function initApp(user) {
   document.getElementById('splash').style.display='none';
   document.getElementById('auth-screen').style.display='none';
   if(pinIsSet()){ showPinScreen('verify'); }
+  else if(!profile().done && !profileAnswered()){ startQuiz(); }
   else { document.getElementById('app').style.display='flex'; }
   document.getElementById('userEmail').textContent = user.email;
 
@@ -1187,6 +1224,91 @@ function toggleCard(id){
 function renderSayIt(){ renderCards('sayList', SAY_IT, 'say'); }
 function renderSelfCare(){ renderCards('careList', SELF_CARE, 'care'); }
 
+// ── Setup questionnaire ───────────────────────────────────────
+// Only asks things that actually change what the app suggests.
+const QUIZ = [
+ {k:'stage', q:"Where are you up to?",
+  s:"Changes which suggestions make sense at all.",
+  o:[["newly","Married fairly recently"],["young","Young kids at home"],["school","School-age kids"],["grown","Older or grown kids"],["empty","Just the two of you again"]]},
+ {k:'place', q:"Does she come back to herself by going out, or staying in?",
+  s:"Some people need the house quiet. Some need to leave it.",
+  o:[["out","Getting out"],["home","Staying in"],["","Depends on the week"]]},
+ {k:'surprises', q:"Does she like being surprised?",
+  s:"Some women love it. Some would rather know so they can look forward to it, or just be ready.",
+  o:[["yes","Loves a surprise"],["no","Would rather know"],["","Not sure"]]},
+ {k:'time', q:"Realistically, how much time do the two of you get?",
+  s:"Answer for a normal week, not a good one.",
+  o:[["0","Under half an hour"],["1","An hour or two"],["2","A whole evening, sometimes"],["","Varies a lot"]]},
+ {k:'budget', q:"What's realistic to spend?",
+  s:"No judgement either way. It just stops the app suggesting things you'd have to say no to.",
+  o:[["0","Keep it free"],["1","A little"],["2","Money isn't the issue"],["","Varies"]]},
+ {k:'energy', q:"How are you both doing for energy right now?",
+  s:"If you're worn out, the app will keep the suggestions small.",
+  o:[["low","Running on empty"],["ok","Normal"],["","Rather not say"]]},
+ {k:'kids', q:"Kids at home?",
+  s:"So it stops suggesting things that assume them, or assume you don't have them.",
+  o:[["1","Yes"],["0","No"],["","Rather not say"]]},
+ {k:'car', q:"Is a car usually available?",
+  s:"Six of the ideas need one.",
+  o:[["1","Yes"],["0","No"]]},
+ {k:'interests', q:"What's she actually into?",
+  s:"Pick as many as fit. This does most of the work on gift ideas.",
+  multi:true,
+  o:[["cooking","Cooking"],["reading","Reading"],["learning","Learning"],["outdoors","Outdoors"],
+     ["music","Music"],["making","Making things"],["home","The house"],["quiet","Quiet"],["going_out","Going out"]]},
+];
+let quizAt = 0;
+
+function startQuiz(){
+  quizAt = 0;
+  if(!state.profile) state.profile = blankProfile();
+  document.getElementById('splash').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('quiz-screen').style.display='flex';
+  drawQuiz();
+}
+function drawQuiz(){
+  const q = QUIZ[quizAt], p = profile();
+  document.getElementById('quizBar').style.width = Math.round((quizAt/QUIZ.length)*100)+'%';
+  document.getElementById('quizStep').textContent = 'Question '+(quizAt+1)+' of '+QUIZ.length;
+  document.getElementById('quizQ').textContent = q.q;
+  document.getElementById('quizSub').textContent = q.s;
+  const cur = p[q.k];
+  document.getElementById('quizOpts').innerHTML = q.o.map(([v,l])=>{
+    const on = q.multi ? (cur||[]).indexOf(v)!==-1 : cur===v && cur!=='';
+    return '<button class="quiz-opt '+(on?'on':'')+'" onclick="quizPick('+JSON.stringify(v).replace(/"/g,'&quot;')+')">'+esc(l)+'</button>';
+  }).join('');
+  document.getElementById('quizNext').style.display = q.multi ? '' : 'none';
+  document.getElementById('quizBack').style && 0;
+  const back=document.querySelector('.quiz-back');
+  if(back) back.style.visibility = quizAt===0 ? 'hidden' : 'visible';
+}
+function quizPick(v){
+  const q = QUIZ[quizAt], p = profile();
+  if(q.multi){
+    const cur = p[q.k] || [];
+    p[q.k] = cur.indexOf(v)!==-1 ? cur.filter(x=>x!==v) : cur.concat([v]);
+    state.profile = p; drawQuiz();
+  } else {
+    p[q.k] = v; state.profile = p; quizNext();
+  }
+}
+function quizNext(){
+  if(quizAt < QUIZ.length-1){ quizAt++; drawQuiz(); }
+  else finishQuiz();
+}
+function quizBack(){ if(quizAt>0){ quizAt--; drawQuiz(); } }
+function quizSkip(){ quizNext(); }
+function finishQuiz(){
+  const p = profile(); p.done = true; state.profile = p;
+  saveToCloud();
+  document.getElementById('quiz-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  renderAll();
+  showToast("Set up \u2014 suggestions will fit you now");
+}
+function retakeQuiz(){ startQuiz(); }
+
 // ── Her profile ───────────────────────────────────────────────
 const SAY_IT = [
   {t:"The first minute decides the rest",b:"Gottman's team watched couples argue and predicted divorce from the first three minutes. Conversations end roughly where they start. Open with blame and it ends in blame, even when you were right about the thing.",n:"What changes it: name the thing that happened, say how it landed, say what you're asking for. The words are yours to pick."},
@@ -1215,7 +1337,7 @@ const INTERESTS = [["cooking","Cooking"],["reading","Reading"],["learning","Lear
   ["outdoors","Outdoors"],["music","Music"],["making","Making things"],
   ["home","The house"],["quiet","Quiet"],["going_out","Going out"]];
 
-function blankProfile(){ return {place:'',budget:'',time:'',kids:'',car:'1',interests:[],pauseContact:false}; }
+function blankProfile(){ return {stage:'',place:'',surprises:'',energy:'',budget:'',time:'',kids:'',car:'1',interests:[],pauseContact:false,done:false}; }
 function profile(){ const p = state.profile || blankProfile(); if(!p.interests) p.interests=[]; return p; }
 function profileAnswered(){
   const p = state.profile; if(!p) return false;
@@ -1253,7 +1375,7 @@ function togglePauseContact(){
 }
 function renderNudges(){
   const msg = profileAnswered() ? '' :
-    '<div class="nudge" onclick="openProfile()">Tell the app a bit about her and these get a lot better. <b>Set it up</b></div>';
+    '<div class="nudge" onclick="startQuiz()">Answer nine quick questions and these get a lot better. <b>Set it up</b></div>';
   const a=document.getElementById('profileNudge'), b=document.getElementById('giftNudge');
   if(a) a.innerHTML=msg;
   if(b) b.innerHTML=msg;
@@ -1286,6 +1408,14 @@ function scoreIdea(i){
   if(p.time !== '' && i.time <= Number(p.time)) s += 2;
   if(p.time !== '' && i.time >  Number(p.time)) s -= 3;
   if(i.kids && p.kids === '1') s += 2;
+  if(i.sur){                                  // ideas where he plans and she doesn't know
+    if(p.surprises==='no')  s -= 6;
+    if(p.surprises==='yes') s += 3;
+  }
+  if(p.energy==='low'){                       // running on empty: small and near
+    const effort = Math.max(i.cost, i.time);
+    s += effort===0 ? 3 : effort===1 ? 0 : -4;
+  }
   const r = state.ratings[i.id];
   if(r) s += (r - 3) * 2.5;
   if(r === undefined) s += 1;
@@ -1506,7 +1636,8 @@ async function submitPin(){
     hidePinScreen(); renderPinSetting(); showToast("PIN turned off");
   } else {
     hidePinScreen();
-    document.getElementById('app').style.display='flex';
+    if(!profile().done && !profileAnswered()) startQuiz();
+    else document.getElementById('app').style.display='flex';
   }
 }
 
