@@ -840,6 +840,10 @@ const defaultNotes = {
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 let currentUser = null;
+// Nothing may be written to the cloud until the first read has finished.
+// Without this, boot-time code (the day rollover) writes a blank state
+// over real data before the read returns, and the account appears to reset.
+let cloudLoaded = false;
 let state = {
   today: new Date().toDateString(),
   todayPair: null, todayDate: null,
@@ -924,6 +928,7 @@ async function signOut() {
 
 // ── Supabase sync ─────────────────────────────────────────────
 async function loadFromCloud() {
+  try {
   if(!currentUser) return;
   setSyncDot(false);
   let data, error;
@@ -964,11 +969,17 @@ async function loadFromCloud() {
   }
   setSyncStatus('synced');
   return true;
+  } finally {
+    // set on every path — early return, success, or error — so a failed
+    // read can never leave the app permanently unable to save
+    cloudLoaded = true;
+  }
 }
 
 let pendingSave = false, saveRetries = 0;
 
 async function saveToCloud() {
+  if (!cloudLoaded) return;   // never write before we know what is already there
   if(!currentUser) return false;
   setSyncStatus('saving');
   const payload = {
