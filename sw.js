@@ -1,4 +1,4 @@
-const CACHE = "happy-wife-v3";
+const CACHE = "happy-wife-v4";
 
 // Install — take over immediately
 self.addEventListener("install", e => {
@@ -20,8 +20,9 @@ self.addEventListener("fetch", e => {
 
   const url = new URL(req.url);
 
-  // Never cache Supabase (auth + data must always be live)
-  if (url.hostname.endsWith("supabase.co")) return;
+  // Leave anything that is not our own origin alone — auth redirects to
+  // Google and Supabase must never be intercepted or served from cache.
+  if (url.origin !== self.location.origin) return;
 
   const isPage = req.mode === "navigate" ||
                  req.destination === "document" ||
