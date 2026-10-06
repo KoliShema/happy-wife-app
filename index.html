@@ -180,6 +180,9 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 .toast.show{opacity:1}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--coral-tint);display:inline-block;margin-left:6px;vertical-align:middle}
 .sync-dot.synced{background:#4CAF50}
+.backbtn{background:none;border:0;color:var(--muted);font-family:'Poppins',sans-serif;font-size:14px;
+  font-weight:600;cursor:pointer;padding:8px 0;min-height:44px;display:block;text-align:left}
+.backbtn:active{color:var(--coral)}
 .nudge{background:#EEEDF8;border:1px solid rgba(31,27,86,.18);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--navy);cursor:pointer;line-height:1.5}
 .suggest-card{background:var(--navy);color:white;border-radius:16px;padding:18px;margin-bottom:18px}
 .suggest-text{font-size:17px;font-weight:600;line-height:1.4}
@@ -434,6 +437,7 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
 
     <!-- ABOUT HER -->
     <div class="screen" id="screen-profile">
+      <button class="backbtn" onclick="goTo('reminders', document.querySelectorAll('.nav-btn')[6])">&larr; Settings</button>
       <div class="page-header"><div class="eyebrow">Settings</div><h1>About her</h1>
         <div class="sub">So the suggestions fit your marriage instead of a generic one. Skip anything you're not sure about.</div>
       </div>
@@ -516,6 +520,16 @@ html,body{height:100%;overflow:hidden;background:var(--cream);font-family:'Poppi
       </div>
       <button class="signout-btn" id="changePinBtn" onclick="changePin()" style="display:none">Change PIN</button>
       <div class="reminder-info">The PIN stops someone picking up your phone and reading this. It's stored on this device only, so it doesn't travel to your other phones, and it isn't what protects your account — your password does that.</div>
+
+      <div class="section-label">Email</div>
+      <div class="reminder-setting">
+        <div>
+          <div class="lbl">Hear from Koli Shema</div>
+          <div class="sub">Occasional emails about new guides and programs. Not often, and you can turn this off here whenever you like.</div>
+        </div>
+        <button class="toggle" id="toggleEmail" onclick="toggleEmailOptin()"></button>
+      </div>
+      <div class="reminder-info" id="emailState"></div>
 
       <div class="section-label">Your data</div>
       <div class="reminder-info">
@@ -1005,6 +1019,7 @@ function renderAll() {
   renderHome(); renderStreak(); renderNotes(); renderDates(); renderReminders();
   renderCustomHabits(); renderDateIdeas(); renderGifts(); renderPinSetting();
   renderProfile(); renderNudges(); renderSayIt(); renderSelfCare();
+  renderEmailOptin(); loadEmailOptin();
   flushPendingSave();
 }
 
@@ -1668,11 +1683,56 @@ function maybeRelock(){
   }
 }
 
+// ── Email opt-in ──────────────────────────────────────────────
+// Off unless someone deliberately turns it on. The timestamp is the
+// record of when they agreed, which is the part that matters later.
+let emailOptin = false;
+
+async function loadEmailOptin(){
+  if(!currentUser) return;
+  try{
+    const { data } = await sb.from('email_optin').select('opted_in').eq('user_id', currentUser.id).maybeSingle();
+    emailOptin = !!(data && data.opted_in);
+  }catch(e){ emailOptin = false; }
+  renderEmailOptin();
+}
+
+function renderEmailOptin(){
+  const t = document.getElementById('toggleEmail');
+  if(t) t.className = 'toggle' + (emailOptin ? ' on' : '');
+  const s = document.getElementById('emailState');
+  if(s) s.textContent = emailOptin
+    ? 'You are on the list. Turn this off and you come straight back off it.'
+    : 'You are not on the list. Nothing is sent to you.';
+}
+
+async function toggleEmailOptin(){
+  if(!currentUser){ showToast("Sign in first"); return; }
+  const next = !emailOptin;
+  emailOptin = next; renderEmailOptin();
+  try{
+    const { error } = await sb.from('email_optin').upsert({
+      user_id: currentUser.id,
+      email: currentUser.email,
+      opted_in: next,
+      changed_at: new Date().toISOString(),
+      source: 'happy-wife'
+    }, { onConflict: 'user_id' });
+    if(error) throw error;
+    showToast(next ? "You're on the list" : "Taken off the list");
+  }catch(e){
+    emailOptin = !next; renderEmailOptin();
+    showToast("Couldn't save that. Try again in a moment.");
+  }
+}
+
 // ── Legal, export, account deletion ───────────────────────────
 const LEGAL = {
   privacy: {
     title: "Privacy policy",
     body: `<p><em>Last updated: October 2026</em></p>
+<h4>Email</h4>
+<p>If you turn on emails in Settings, your address goes on a list Koli Shema can send to, together with the date you agreed. Turn it off and you come off that list. Every email we send has an unsubscribe link. If you never turn it on, your address is only ever used to sign you in.</p>
 <h4>What we collect</h4>
 <p>Only two things: the email address you sign up with, and whatever you choose to enter in the app — which habits you marked done, your streak, your love notes, special dates, gift ideas and custom habits.</p>
 <p>We do not collect your name, phone number, location, contacts or browsing activity. There is no analytics or tracking in this app, and no advertising.</p>
