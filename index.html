@@ -1069,11 +1069,11 @@ async function initApp(user) {
   document.getElementById('splash').style.display='none';
   document.getElementById('auth-screen').style.display='none';
   if(pinIsSet()){ showPinScreen('verify'); }
-  else if(!profile().done && !profileAnswered()){ startQuiz(); }
+  else   await loadFromCloud();
+if(!profile().done && !profileAnswered()){ startQuiz(); }
   else { document.getElementById('app').style.display='flex'; }
   document.getElementById('userEmail').textContent = user.email;
 
-  await loadFromCloud();
 
   if(state.todayDate !== state.today) {
     state.done=[false,false]; state.todayDate=state.today;
@@ -2084,7 +2084,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
     const changed = !currentUser || currentUser.id !== session.user.id;
     currentUser = session.user;
     if (changed) { cloudLoaded = false; }   // new account: read before writing
-    await initApp();
+    try {
+      await initApp();
+    } catch (e) {
+      // never leave the app unable to save because setup threw
+      cloudLoaded = true;
+      console.error('initApp failed', e);
+    }
   } else {
     currentUser = null;
     cloudLoaded = false;
