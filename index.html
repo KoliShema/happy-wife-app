@@ -2056,18 +2056,22 @@ async function boot(){
   }catch(e){ console.error(e); showAuthScreen(); }
 }
 
-sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='INITIAL_SESSION') return;              // boot() handles this
-  if(event==='TOKEN_REFRESHED') return;              // nothing to redraw
-  if(session?.user){
-    if(!booted || currentUser?.id !== session.user.id){
-      booted=true; await initApp(session.user);
-    }
-  } else if(event==='SIGNED_OUT'){
-    booted=false; currentUser=null; showAuthScreen();
+sb.auth.onAuthStateChange(async (event, session) => {
+  // Decide on whether a session exists, not on which event name arrived.
+  // The old version listed INITIAL_SESSION, TOKEN_REFRESHED and SIGNED_OUT
+  // but not SIGNED_IN — so returning from Google left the sign-in screen up
+  // and the app appeared to loop back to the Google button.
+  if (session && session.user) {
+    const changed = !currentUser || currentUser.id !== session.user.id;
+    currentUser = session.user;
+    if (changed) { cloudLoaded = false; }   // new account: read before writing
+    await initApp();
+  } else {
+    currentUser = null;
+    cloudLoaded = false;
+    showAuthScreen();
   }
 });
-
 // Re-check the session when the app comes back to the foreground
 // If the app sat open overnight, roll the day over properly
 async function checkDayRollover(){
