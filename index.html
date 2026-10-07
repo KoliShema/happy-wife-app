@@ -2112,5 +2112,25 @@ if("serviceWorker" in navigator){
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
 </script>
+<style>
+/* ---- phone fixes ----------------------------------------------------
+   The quiz screen and the nav bar already respect the notch and the home
+   indicator; the sign-in and PIN screens did not, so on a notched phone
+   their content could sit underneath. Both are full-screen overlays, so
+   they need the insets as padding. Scrolling is allowed inside them in
+   case a small screen in landscape cannot fit the card.              */
+#auth-screen, #pin-screen{
+  padding-top:    calc(var(--safe-top) + 2rem);
+  padding-bottom: calc(var(--safe-bottom) + 2rem);
+  padding-left:   max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right:  max(1.25rem, env(safe-area-inset-right, 0px));
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+/* iOS: a short landscape window should still be able to scroll to the button */
+@media (max-height:520px){
+  #auth-screen, #pin-screen{ justify-content:flex-start; }
+}
+</style>
 </body>
 </html>
