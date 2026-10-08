@@ -628,7 +628,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     detectSessionInUrl: true,      // pick up the token after Google redirect
     storage: window.localStorage,
     storageKey: 'kolishema-auth',   // shared with the landing page and the other apps
-    flowType: 'pkce'
+    flowType: 'implicit'
   }
 });
 
