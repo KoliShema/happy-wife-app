@@ -2518,9 +2518,22 @@ if("serviceWorker" in navigator){
   function esc_(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+  /* Only shown to couples who are actually paired. Unpaired it is a box that
+     takes an answer and then says "waiting for them" forever, which is worse
+     than not being there at all. */
+  var paired = null;
+  async function isPaired(){
+    if (paired !== null) return paired;
+    var c = db(); if (!c) { paired = false; return false; }
+    try { var r = await c.rpc('partner_id'); paired = !!(r && r.data); }
+    catch(e){ paired = false; }
+    return paired;
+  }
+
   async function draw(){
     var host = document.getElementById('screen-home');
     if (!host || !me()) return;
+    if (!(await isPaired())) { var gone = document.getElementById('weekQ'); if (gone) gone.remove(); return; }
     var box = document.getElementById('weekQ');
     if (!box) { box = document.createElement('div'); box.id = 'weekQ'; box.className = 'card weekq'; host.appendChild(box); }
 
