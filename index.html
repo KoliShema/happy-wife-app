@@ -2216,5 +2216,61 @@ if("serviceWorker" in navigator){
 .pw-link:active{color:var(--coral)}
 .pw-err{color:#C62828;font-size:13px;min-height:18px;margin:2px 0 6px}
 </style>
+<script>
+/* Google sign-in inside an in-app browser
+   ---------------------------------------
+   A link opened from WhatsApp, Instagram or Facebook runs in that app's own
+   embedded browser. Google refuses OAuth in embedded webviews, and even when
+   it does not, the session lands in a storage area the embedded browser
+   cannot read back — so the app returns to the sign-in screen with no error
+   and nothing to show for it. That is what "it just goes back to login"
+   looks like, and no change to the auth flow can fix it from inside.
+
+   So: detect that case, say so plainly, and offer the one thing that works. */
+(function(){
+  var ua = navigator.userAgent || '';
+  var inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|MicroMessenger|Twitter/i.test(ua);
+  var iOS   = /iPad|iPhone|iPod/.test(ua);
+
+  function warn(){
+    var card = document.querySelector('.auth-card');
+    if (!card || document.getElementById('inapp-note')) return;
+    var d = document.createElement('div');
+    d.id = 'inapp-note';
+    d.className = 'inapp-note';
+    d.innerHTML =
+      '<strong>Open this in Safari first</strong>' +
+      '<span>Google will not sign you in inside ' +
+      (/WhatsApp/i.test(ua) ? 'WhatsApp' : 'this app') + '\u2019s browser. ' +
+      'Tap the ' + (iOS ? '\u2026 or share button' : 'menu') +
+      ' at the ' + (iOS ? 'bottom' : 'top') + ' and choose ' +
+      '\u201cOpen in ' + (iOS ? 'Safari' : 'Browser') + '\u201d, then sign in there. ' +
+      'Or use your email and password below.</span>';
+    card.insertBefore(d, card.firstChild);
+  }
+
+  /* Anything Google hands back in the URL fragment — implicit flow reports
+     its failures there, not in the query string, so they were invisible. */
+  function showHashError(){
+    if (!location.hash || location.hash.indexOf('error') === -1) return;
+    var p = new URLSearchParams(location.hash.slice(1));
+    var msg = p.get('error_description') || p.get('error');
+    if (!msg) return;
+    var el = document.getElementById('login-err');
+    if (el) el.textContent = decodeURIComponent(msg).replace(/\+/g, ' ');
+    history.replaceState({}, document.title, location.pathname);
+  }
+
+  function run(){ if (inApp) warn(); showHashError(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
+<style>
+.inapp-note{display:block;background:#FFF4E5;border:1px solid #F0C98A;border-radius:12px;
+  padding:13px 15px;margin-bottom:16px;text-align:left}
+.inapp-note strong{display:block;color:#7A4A00;font-size:14.5px;margin-bottom:4px}
+.inapp-note span{display:block;color:#7A4A00;font-size:13.5px;line-height:1.55}
+</style>
 </body>
 </html>
