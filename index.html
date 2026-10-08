@@ -2076,6 +2076,30 @@ async function boot(){
     // exchange here, and awaiting it, removes the race. If it genuinely fails
     // the reason is shown on the sign-in card instead of vanishing.
     try {
+      // Implicit flow hands the session back in the URL fragment. On iOS the
+      // library's own detection often misses it — a documented failure where
+      // getSession() returns null although the token is right there in the URL,
+      // and the app bounces back to sign-in. So read the fragment ourselves and
+      // set the session explicitly. This also covers the case where Google
+      // completes in a separate Safari view rather than in the app's own window.
+      var _h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+      if (_h.get('access_token')) {
+        var _s = await sb.auth.setSession({
+          access_token:  _h.get('access_token'),
+          refresh_token: _h.get('refresh_token') || ''
+        });
+        if (_s && _s.error) {
+          var _he = document.getElementById('login-err');
+          if (_he) _he.textContent = _s.error.message || 'Could not finish signing in.';
+        }
+        history.replaceState({}, document.title, location.pathname);
+      }
+      // Google may also return an error in the fragment rather than a token.
+      if (_h.get('error_description')) {
+        var _hd = document.getElementById('login-err');
+        if (_hd) _hd.textContent = decodeURIComponent(_h.get('error_description'));
+      }
+
       var _p = new URLSearchParams(location.search);
       if (_p.get('code')) {
         var _r = await sb.auth.exchangeCodeForSession(_p.get('code'));
