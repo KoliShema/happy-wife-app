@@ -2742,5 +2742,111 @@ if("serviceWorker" in navigator){
 .just-or{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:#9D98BC;font-size:12.5px}
 .just-or::before,.just-or::after{content:"";flex:1;height:1px;background:#E4E1EF}
 </style>
+<script>
+/* Two fixes to the opening questions.
+
+   1. It kept coming back.
+      The answers were only ever stored in the cloud, inside notes._profile.
+      So it depended on a round trip completing, and for anybody using the app
+      without an account it had nowhere to live at all — meaning the questions
+      returned on every single open. Now the answers are also kept on the
+      phone, and read from there first. The cloud copy still syncs between
+      devices; the local one makes it work at all.
+
+   2. "Where are you up to?" was pick-one.
+      A family can easily have school-age children and grown ones. That
+      question now takes more than one answer. The rest stay single-choice,
+      because they are genuinely either/or.
+   */
+(function(){
+  var LOCAL = 'hw-profile';
+  var MULTI = { stage: true };
+
+  function readLocal(){ try { return JSON.parse(localStorage.getItem(LOCAL) || 'null'); } catch(e){ return null; } }
+  function writeLocal(p){ try { localStorage.setItem(LOCAL, JSON.stringify(p || {})); } catch(e){} }
+
+  /* Restore from the phone before anything decides whether to ask again. */
+  function restore(){
+    var p = readLocal();
+    if (!p) return;
+    try {
+      if (typeof profile === 'undefined' || !profile) window.profile = {};
+      for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) profile[k] = p[k];
+    } catch(e){}
+  }
+  restore();
+
+  /* Keep the phone copy in step whenever the quiz finishes. */
+  if (typeof finishQuiz === 'function' && !finishQuiz.__kept) {
+    var origFinish = finishQuiz;
+    window.finishQuiz = function(){
+      var r = origFinish.apply(this, arguments);
+      try { writeLocal(typeof profile !== 'undefined' ? profile : null); } catch(e){}
+      return r;
+    };
+    window.finishQuiz.__kept = true;
+  }
+
+  /* Multi-select for the stage question. quizPick normally sets one value and
+     advances; here it toggles instead, and Next moves on. */
+  if (typeof quizPick === 'function' && !quizPick.__multi) {
+    var origPick = quizPick;
+    window.quizPick = function(val){
+      var q = null;
+      try { q = QUIZ[quizStep]; } catch(e){}
+      if (!q || !MULTI[q.k]) return origPick.apply(this, arguments);
+
+      try {
+        if (typeof profile === 'undefined' || !profile) window.profile = {};
+        var cur = profile[q.k];
+        if (!Array.isArray(cur)) cur = cur ? [cur] : [];
+        var at = cur.indexOf(val);
+        if (at === -1) cur.push(val); else cur.splice(at, 1);
+        profile[q.k] = cur;
+        writeLocal(profile);
+        if (typeof drawQuiz === 'function') drawQuiz();
+        setTimeout(markChosen, 30);
+      } catch(e){ return origPick.apply(this, arguments); }
+    };
+    window.quizPick.__multi = true;
+  }
+
+  /* Show which ones are ticked, since drawQuiz only knows about single answers. */
+  function markChosen(){
+    var q = null;
+    try { q = QUIZ[quizStep]; } catch(e){ return; }
+    if (!q || !MULTI[q.k]) return;
+    var chosen = (typeof profile !== 'undefined' && Array.isArray(profile[q.k])) ? profile[q.k] : [];
+    var opts = document.querySelectorAll('#quiz-screen .q-opt, #quiz-screen .quiz-opt, #quiz .q-opt, #quiz .quiz-opt');
+    opts.forEach(function(el){
+      var oc = el.getAttribute('onclick') || '';
+      var m = oc.match(/'([^']*)'/);
+      if (!m) return;
+      if (chosen.indexOf(m[1]) !== -1) el.classList.add('on'); else el.classList.remove('on');
+    });
+    var hint = document.getElementById('multiHint');
+    if (!hint) {
+      var host = document.querySelector('#quiz-screen .q-sub, #quiz .q-sub, #quiz-screen p, #quiz p');
+      if (host) {
+        hint = document.createElement('span');
+        hint.id = 'multiHint';
+        hint.textContent = ' Pick as many as fit.';
+        hint.style.opacity = '.75';
+        host.appendChild(hint);
+      }
+    }
+  }
+
+  var origDraw = (typeof drawQuiz === 'function') ? drawQuiz : null;
+  if (origDraw && !origDraw.__multi) {
+    window.drawQuiz = function(){
+      var r = origDraw.apply(this, arguments);
+      setTimeout(markChosen, 20);
+      return r;
+    };
+    window.drawQuiz.__multi = true;
+  }
+})();
+</script>
 </body>
 </html>
