@@ -2594,5 +2594,87 @@ if("serviceWorker" in navigator){
 .wq-wait{margin-top:10px;font-size:13.5px}
 .wq-err{color:#C62828;font-size:13px;min-height:16px}
 </style>
-</body>
+<script>
+/* Seven minutes, three times a year
+   ---------------------------------
+   Finkel et al. (2013), Psychological Science: 120 couples, randomised,
+   two years. Every couple's marital quality declined in year one. In year
+   two, half did a seven-minute writing exercise three times — 21 minutes
+   for the year — and in that group the decline was entirely eliminated.
+   They fought just as often about things just as serious; they were simply
+   less distressed by the fights.
+
+   The whole intervention is one instruction: describe your most recent
+   disagreement from the view of a neutral third party who wants the best
+   for everyone involved.
+
+   Two design points taken straight from the study:
+   - It is PRIVATE. Never shown to the spouse, never sent anywhere. It works
+     by giving you distance from your own view, not by showing him yours.
+   - It is three times a year. Not weekly, not daily. Rarity is the design;
+     a prompt like this every week would become wallpaper.
+
+   Stored on this device only. Nothing leaves the phone. */
+(function(){
+  var KEY  = 'hm-reappraise';
+  var EVERY = 122;                 // days: three times a year
+
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)||'{}'); } catch(e){ return {}; } }
+  function save(o){ try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){} }
+  function days(a,b){ return Math.floor((a-b)/86400000); }
+
+  function due(){
+    var st = load();
+    if (!st.first) { save({ first: Date.now(), last: 0, done: 0 }); return false; }  // not on day one
+    if (st.done >= 99) return false;
+    var since = st.last ? days(Date.now(), st.last) : days(Date.now(), st.first);
+    return since >= EVERY;
+  }
+
+  function open(){
+    if (document.getElementById('reapWrap')) return;
+    var w = document.createElement('div');
+    w.id = 'reapWrap'; w.className = 'reap-wrap';
+    w.innerHTML =
+      '<div class="reap-card">' +
+        '<p class="eyebrow">Seven minutes, three times a year</p>' +
+        '<h2>Think of the last disagreement you had</h2>' +
+        '<p class="reap-lead">Now write about it as a neutral person would \u2014 somebody who was there, ' +
+        'who likes you both, and who wants the best for everyone. What would they have seen? ' +
+        'What would they say about it?</p>' +
+        '<textarea id="reapIn" class="reap-in" rows="8" placeholder="Take your time."></textarea>' +
+        '<p class="reap-note">Nobody sees this. Not her, not anybody. It stays on this phone, ' +
+        'and you can delete it whenever you like.</p>' +
+        '<button class="btn" id="reapDone">Done</button>' +
+        '<button class="pw-link reap-later" id="reapLater">Not now</button>' +
+      '</div>';
+    document.body.appendChild(w);
+
+    document.getElementById('reapDone').onclick = function(){
+      var st = load(); st.last = Date.now(); st.done = (st.done||0) + 1; save(st);
+      w.remove();
+    };
+    document.getElementById('reapLater').onclick = function(){
+      var st = load(); st.last = Date.now() - (EVERY - 7) * 86400000; save(st);  // ask again in a week
+      w.remove();
+    };
+  }
+
+  function check(){ if (due()) open(); }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(check, 2500); });
+  else setTimeout(check, 2500);
+})();
+</script>
+<style>
+.reap-wrap{position:fixed;inset:0;z-index:9000;background:#1F1B56;display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 18px calc(env(safe-area-inset-bottom,0px) + 20px);overflow-y:auto}
+.reap-card{background:#fff;border-radius:20px;padding:26px 22px;max-width:420px;width:100%}
+.reap-card h2{color:#1F1B56;font-size:21px;line-height:1.3;margin:4px 0 10px}
+.reap-lead{color:#4A4570;font-size:15px;line-height:1.6;margin:0 0 16px}
+.reap-in{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid #E4E1EF;background:#FAF9FD;
+  color:#1F1B56;font:inherit;font-size:15.5px;line-height:1.55;resize:vertical;box-sizing:border-box;margin-bottom:12px}
+.reap-note{color:#8A85AD;font-size:13px;line-height:1.5;margin:0 0 16px}
+.reap-later{margin-top:6px}
+</style></body>
 </html>
