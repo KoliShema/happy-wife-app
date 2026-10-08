@@ -2361,5 +2361,43 @@ if("serviceWorker" in navigator){
 .pwreset-card h2{color:#1F1B56;font-size:22px;margin:0 0 6px}
 .pwreset-card p{color:#6F6A94;font-size:14px;margin:0 0 18px;line-height:1.5}
 </style>
+<script>
+/* Getting between the three apps, from any screen.
+   It was at the bottom of Settings, which nobody finds. The three chevrons
+   are the Koli Shema mark, so it reads as "back to the whole thing" rather
+   than another control inside this app. Hidden on the sign-in screen, where
+   there is nothing to go back from yet. */
+(function(){
+  function add(){
+    if (document.getElementById('appSwitch')) return;
+    var a = document.createElement('a');
+    a.id = 'appSwitch';
+    a.href = 'https://kolishema.github.io';
+    a.setAttribute('aria-label','All the Happy Relationships apps');
+    a.innerHTML = '<i></i><i></i><i></i>';
+    document.body.appendChild(a);
+    setInterval(function(){
+      var app = document.getElementById('app');
+      var on = app && getComputedStyle(app).display !== 'none';
+      a.style.display = on ? 'flex' : 'none';
+    }, 600);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add);
+  else add();
+})();
+</script>
+<style>
+#appSwitch{position:fixed;z-index:800;display:none;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  right:calc(env(safe-area-inset-right,0px) + 12px);
+  gap:3px;align-items:center;justify-content:center;
+  padding:11px 12px;border-radius:999px;background:rgba(31,27,86,.07);
+  text-decoration:none;min-height:44px;min-width:44px;box-sizing:border-box}
+#appSwitch i{display:block;width:4px;height:15px;border-radius:1px;transform:skewX(-14deg)}
+#appSwitch i:nth-child(1){background:#F3A79E}
+#appSwitch i:nth-child(2){background:#EE6E64}
+#appSwitch i:nth-child(3){background:#EB4137}
+#appSwitch:active{background:rgba(31,27,86,.14)}
+</style>
 </body>
 </html>
