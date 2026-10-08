@@ -2442,5 +2442,144 @@ if("serviceWorker" in navigator){
 <style>
 .why-no-google{color:#6F6A94;font-size:13.5px;line-height:1.55;margin:0 0 14px;text-align:center}
 </style>
+<script>
+/* One question a week
+   -------------------
+   Both answer about themselves. Neither sees the other's answer until both
+   have written one — and that rule lives in the database, not here, so it
+   holds even if this code is wrong.
+
+   Not framed as a quiz and never scored. The research that supports this is
+   structured self-disclosure between two people who want to know each other;
+   a score on how well you know your wife would be a harm, not feedback.
+   Nothing is kept past the current week.
+
+   The order of the questions is the design. The ones that matter come months
+   in, because asked in week one they are an interrogation. */
+(function(){
+  var Q = [
+    "What was the best part of your week?",
+    "What is something small that makes a day easier for you?",
+    "What do you wish there was more time for?",
+    "What is something you are looking forward to?",
+    "What is a job you actually do not mind doing?",
+    "What did you think today that you did not say?",
+    "What is something you are proud of that nobody noticed?",
+    "When you have had a hard day, what actually helps?",
+    "What is something you used to love doing?",
+    "What do you worry about that you do not say out loud?",
+    "What is something you find harder than people realise?",
+    "When do you feel most like yourself?",
+    "What is something you need that you have never asked for?",
+    "When you were growing up, what did a good marriage look like?",
+    "What is something you think I do not know about you?"
+  ];
+
+  function me(){ try { return (typeof currentUser!=='undefined' && currentUser) ? currentUser : null; } catch(e){ return null; } }
+  function db(){ try { return (typeof sb!=='undefined') ? sb : null; } catch(e){ return null; } }
+
+  /* ISO week, so both phones agree on which question it is */
+  function weekOf(d){
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var day = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+    var start = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    var n = Math.ceil(((d - start) / 86400000 + 1) / 7);
+    return d.getUTCFullYear() + '-W' + (n < 10 ? '0' : '') + n;
+  }
+  function weekNumber(w){ return parseInt(w.split('-W')[1], 10) || 1; }
+
+  var week = weekOf(new Date());
+  var qi   = (weekNumber(week) - 1) % Q.length;
+
+  async function load(){
+    var c = db(), u = me();
+    if (!c || !u) return null;
+    try {
+      var r = await c.from('week_answers').select('user_id,answer').eq('week', week);
+      var rows = (r && r.data) || [];
+      var mine = rows.filter(function(x){ return x.user_id === u.id; })[0];
+      var theirs = rows.filter(function(x){ return x.user_id !== u.id; })[0];
+      return { mine: mine ? mine.answer : null, theirs: theirs ? theirs.answer : null };
+    } catch(e){ return null; }
+  }
+
+  async function save(text){
+    var c = db(), u = me();
+    if (!c || !u) return false;
+    try {
+      var r = await c.from('week_answers').upsert(
+        { user_id:u.id, week:week, q:qi, answer:text, updated_at:new Date().toISOString() },
+        { onConflict:'user_id,week' });
+      return !(r && r.error);
+    } catch(e){ return false; }
+  }
+
+  function esc_(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  async function draw(){
+    var host = document.getElementById('screen-home');
+    if (!host || !me()) return;
+    var box = document.getElementById('weekQ');
+    if (!box) { box = document.createElement('div'); box.id = 'weekQ'; box.className = 'card weekq'; host.appendChild(box); }
+
+    var st = await load();
+    if (!st) { box.remove(); return; }
+
+    if (st.mine && st.theirs) {
+      box.innerHTML =
+        '<p class="eyebrow">This week</p>' +
+        '<h3 class="wq-q">' + esc_(Q[qi]) + '</h3>' +
+        '<div class="wq-pair"><span class="wq-who">You</span><p>' + esc_(st.mine) + '</p></div>' +
+        '<div class="wq-pair wq-them"><span class="wq-who">Them</span><p>' + esc_(st.theirs) + '</p></div>';
+      return;
+    }
+
+    if (st.mine) {
+      box.innerHTML =
+        '<p class="eyebrow">This week</p>' +
+        '<h3 class="wq-q">' + esc_(Q[qi]) + '</h3>' +
+        '<div class="wq-pair"><span class="wq-who">You</span><p>' + esc_(st.mine) + '</p></div>' +
+        '<p class="muted wq-wait">You will both see each other\u2019s answer once they have written theirs.</p>';
+      return;
+    }
+
+    box.innerHTML =
+      '<p class="eyebrow">This week</p>' +
+      '<h3 class="wq-q">' + esc_(Q[qi]) + '</h3>' +
+      '<p class="muted">About you, not about them. A sentence is plenty.</p>' +
+      '<textarea id="wqIn" class="wq-in" rows="2" maxlength="400"></textarea>' +
+      '<button class="btn" id="wqSave">Save</button>' +
+      '<div id="wqErr" class="wq-err"></div>';
+
+    var btn = document.getElementById('wqSave');
+    btn.onclick = async function(){
+      var v = (document.getElementById('wqIn').value || '').trim();
+      if (!v) { document.getElementById('wqErr').textContent = 'Write something first.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      var ok = await save(v);
+      if (!ok) { document.getElementById('wqErr').textContent = 'Could not save that.'; this.disabled = false; this.textContent = 'Save'; return; }
+      draw();
+    };
+  }
+
+  try { if (db() && db().auth) db().auth.onAuthStateChange(function(){ setTimeout(draw, 500); }); } catch(e){}
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(draw, 900); });
+  else setTimeout(draw, 900);
+})();
+</script>
+<style>
+.weekq{border-left:3px solid #1F1B56}
+.wq-q{font-size:18px;line-height:1.4;margin:4px 0 8px}
+.wq-in{width:100%;padding:12px 14px;border-radius:11px;border:1.5px solid #E4E1EF;background:#FAF9FD;
+  color:#1F1B56;font:inherit;font-size:15px;resize:vertical;box-sizing:border-box;margin-bottom:10px}
+.wq-pair{padding:11px 0;border-top:1px solid rgba(0,0,0,.07)}
+.wq-pair p{margin:3px 0 0;font-size:15.5px;line-height:1.5}
+.wq-who{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#8A85AD}
+.wq-them .wq-who{color:#EB4137}
+.wq-wait{margin-top:10px;font-size:13.5px}
+.wq-err{color:#C62828;font-size:13px;min-height:16px}
+</style>
 </body>
 </html>
