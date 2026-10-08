@@ -2399,5 +2399,48 @@ if("serviceWorker" in navigator){
 #appSwitch i:nth-child(3){background:#EB4137}
 #appSwitch:active{background:rgba(31,27,86,.14)}
 </style>
+<script>
+/* Only offer Google where Google can actually finish.
+   iOS gives a home-screen web app its own storage box. Tapping Google hands
+   off to Safari, Safari completes the sign-in and keeps the session, and the
+   app comes back to its own box and sees nothing. Same inside WhatsApp's
+   browser. No change to the auth flow fixes that — it is how iOS works.
+
+   On an iPhone in an ordinary Safari tab, Google is fine. So hide the button
+   exactly where it cannot work, rather than for all iPhones, and say why. */
+(function(){
+  var ua = navigator.userAgent || '';
+  var iOS = /iPad|iPhone|iPod/.test(ua);
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  var inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|MicroMessenger|Twitter/i.test(ua);
+  var cannot = (iOS && standalone) || inApp;
+  if (!cannot) return;
+
+  function apply(){
+    var btn = document.querySelector('.google-btn');
+    if (!btn || btn.dataset.hiddenHere) return;
+    btn.dataset.hiddenHere = '1';
+    btn.style.display = 'none';
+    var or = document.querySelector('.pw-or');
+    if (or) or.style.display = 'none';
+    var note = document.getElementById('whyNoGoogle');
+    if (!note) {
+      note = document.createElement('p');
+      note.id = 'whyNoGoogle';
+      note.className = 'why-no-google';
+      note.textContent = inApp
+        ? 'Sign in with your email below. Google cannot finish inside another app\u2019s browser.'
+        : 'Sign in with your email below. Google cannot finish in an app added to the Home Screen.';
+      btn.parentNode.insertBefore(note, btn);
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+  else apply();
+  setTimeout(apply, 800);
+})();
+</script>
+<style>
+.why-no-google{color:#6F6A94;font-size:13.5px;line-height:1.55;margin:0 0 14px;text-align:center}
+</style>
 </body>
 </html>
