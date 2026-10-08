@@ -2299,5 +2299,67 @@ if("serviceWorker" in navigator){
   padding-top:20px;min-height:44px}
 .back-apps:active{color:#EB4137}
 </style>
+<script>
+/* Setting a new password after a reset email.
+   The email was being sent and the link did sign you in, but nothing ever
+   asked for a new password — so the link appeared to do nothing. Supabase
+   reports this as a PASSWORD_RECOVERY event, and the URL fragment carries
+   type=recovery. Either one puts up the form below. */
+(function(){
+  function show(){
+    if (document.getElementById('pwReset')) return;
+    var wrap = document.createElement('div');
+    wrap.id = 'pwReset';
+    wrap.className = 'pwreset-wrap';
+    wrap.innerHTML =
+      '<div class="pwreset-card">' +
+        '<h2>Choose a new password</h2>' +
+        '<p>Type it twice. You will be signed in afterwards.</p>' +
+        '<input id="pwNew1" class="pw-in" type="password" autocomplete="new-password" placeholder="New password">' +
+        '<input id="pwNew2" class="pw-in" type="password" autocomplete="new-password" placeholder="Again">' +
+        '<div id="pwResetErr" class="pw-err"></div>' +
+        '<button class="pw-btn" id="pwSave">Save it</button>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    document.getElementById('pwSave').onclick = async function(){
+      var a = document.getElementById('pwNew1').value;
+      var b = document.getElementById('pwNew2').value;
+      var err = document.getElementById('pwResetErr');
+      if (a.length < 6) { err.textContent = 'At least six characters.'; return; }
+      if (a !== b)      { err.textContent = 'Those two do not match.'; return; }
+      this.disabled = true; this.textContent = 'Saving\u2026';
+      try {
+        var r = await sb.auth.updateUser({ password: a });
+        if (r && r.error) throw r.error;
+        history.replaceState({}, document.title, location.pathname);
+        wrap.remove();
+      } catch (e) {
+        err.textContent = (e && e.message) || 'Could not save that.';
+        this.disabled = false; this.textContent = 'Save it';
+      }
+    };
+  }
+
+  try {
+    sb.auth.onAuthStateChange(function(event){
+      if (event === 'PASSWORD_RECOVERY') show();
+    });
+  } catch (e) {}
+
+  function checkUrl(){
+    if (location.hash && location.hash.indexOf('type=recovery') !== -1) show();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkUrl);
+  else checkUrl();
+  setTimeout(checkUrl, 900);
+})();
+</script>
+<style>
+.pwreset-wrap{position:fixed;inset:0;z-index:9999;background:#1F1B56;display:flex;align-items:center;
+  justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 24px);overflow-y:auto}
+.pwreset-card{background:#fff;border-radius:20px;padding:26px 22px;max-width:380px;width:100%}
+.pwreset-card h2{color:#1F1B56;font-size:22px;margin:0 0 6px}
+.pwreset-card p{color:#6F6A94;font-size:14px;margin:0 0 18px;line-height:1.5}
+</style>
 </body>
 </html>
