@@ -2069,6 +2069,27 @@ function showAuthScreen(){
 // Restore an existing session on load BEFORE deciding what to show
 async function boot(){
   try{
+    // Finish the Google sign-in ourselves rather than trusting the library's
+    // automatic URL detection. On iOS that detection races with getSession()
+    // below: if it has not finished, we conclude there is no session and show
+    // the sign-in screen again, which looks like an endless loop. Doing the
+    // exchange here, and awaiting it, removes the race. If it genuinely fails
+    // the reason is shown on the sign-in card instead of vanishing.
+    try {
+      var _p = new URLSearchParams(location.search);
+      if (_p.get('code')) {
+        var _r = await sb.auth.exchangeCodeForSession(_p.get('code'));
+        if (_r && _r.error) {
+          var _e = document.getElementById('login-err');
+          if (_e) _e.textContent = _r.error.message || 'Could not finish signing in.';
+        }
+        history.replaceState({}, document.title, location.pathname);
+      }
+    } catch (err) {
+      var _e2 = document.getElementById('login-err');
+      if (_e2) _e2.textContent = (err && err.message) || 'Could not finish signing in.';
+    }
+
     const {data:{session}} = await sb.auth.getSession();
     if(session?.user){ booted=true; await initApp(session.user); }
     else { showAuthScreen(); }
