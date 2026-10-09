@@ -675,6 +675,48 @@ const builtinHabits = [
   {title:"Text her something that isn’t a question", desc:"No logistics, nothing starting with “can you”. Just a thing you thought."},
   {title:"Ask before volunteering her for something", desc:"Her time is hers to give."},
   {title:"Have the thing ready before she looks", desc:"You know what she reaches for. Have it there."}
+,
+  {title:"Before you plan the next quiet evening in, suggest something neither of you has done before", desc:"Pleasant and familiar was the control group. New is the part that worked."},
+  {title:"The next time she says she's never tried something, write it down and book it", desc:""},
+  {title:"This week, learn one thing together that you are both bad at", desc:"Being beginners next to each other is the whole point."},
+  {title:"Next time you're planning a Sunday, pick somewhere neither of you has been", desc:""},
+  {title:"The next time you're both free, take a different route home and stop somewhere", desc:""},
+  {title:"Ask her what she wanted to do before the children came, and do a small version of it", desc:""},
+  {title:"Next time there's a thing she'd never normally agree to, ask anyway", desc:""},
+  {title:"Before this month ends, do one thing together that will make a story", desc:"A thing you will still be telling people about is worth more than ten pleasant evenings."},
+  {title:"The next time you're choosing between easy and interesting, choose interesting", desc:""},
+  {title:"Ask her to teach you something she's good at and you are not", desc:""},
+  {title:"When she's up in the night, take the next one without being asked", desc:"Sleep loss wrecks emotional regulation before it does anything else."},
+  {title:"The next time she's feeding at 3am, bring her a drink and don't talk", desc:""},
+  {title:"Once this week, get up with them so she doesn't have to open her eyes", desc:""},
+  {title:"The next time she apologises for the house, tell her you hadn't noticed", desc:""},
+  {title:"When you get in tonight, take the baby before you take your coat off", desc:""},
+  {title:"Ask her what she did today, and don't let her say nothing", desc:"The days are long and they leave nothing to show. Saying it out loud is the repair."},
+  {title:"The next time she says she's not herself any more, don't fix it — agree it's hard", desc:""},
+  {title:"Once this month, send her out of the house with nowhere to be", desc:""},
+  {title:"Next time the baby settles for you and not her, don't say so", desc:""},
+  {title:"Before Shabbos, ask what one thing would make the day easier, and do that one", desc:""},
+  {title:"The next time you're both exhausted, say out loud that this part ends", desc:""},
+  {title:"Ask her who she's spoken to this week who isn't family", desc:"Isolation does as much damage as the tiredness."},
+  {title:"The next time she's holding the baby and hasn't eaten, bring food without asking", desc:""},
+  {title:"Once this week, be the one who knows where everything is", desc:"Knowing where things are is the invisible job. Take it for a day."},
+  {title:"When they're finally asleep, sit with her instead of going to your phone", desc:""},
+  {title:"Next time you're telling somebody about a decision, say we rather than I", desc:""},
+  {title:"When something goes wrong this week, say we'll sort it, not you'll sort it", desc:""},
+  {title:"The next time you talk about the children to somebody else, mention what she does", desc:""},
+  {title:"Next time you're asked how you are, answer for both of you and mean it", desc:""},
+  {title:"The next time she's in the middle of something, wait instead of interrupting", desc:""},
+  {title:"When she starts a sentence with 'you'll think this is silly', put everything down", desc:""},
+  {title:"Next time you disagree with her in front of somebody, say nothing until later", desc:""},
+  {title:"The next time she tells you something twice, it is because you didn't hear it the first time", desc:""},
+  {title:"Once this week, ask a second question instead of moving on", desc:""},
+  {title:"Ask what she's reading, and then ask about it again next week", desc:"Asking once is interest. Asking again is attention."},
+  {title:"The next time she mentions a friend you don't know, ask who they are", desc:""},
+  {title:"Find out what she worries about at 2am that she has never told you", desc:""},
+  {title:"Next time she's on the phone to her mother, notice how long it takes out of her", desc:""},
+  {title:"Ask her what she'd do with a free day, and then arrange it", desc:""},
+  {title:"The next time she's quiet in the car, ask once and then leave it", desc:""},
+  {title:"Ask which part of the week she dreads, and take one piece of it", desc:""}
 ];
 const dateIdeas = [
   {id:"d61d7dd9e",cat:"out",t:"Try a kosher restaurant neither of you has been to",cost:1,time:2,place:"out",kids:0,contact:0,car:0},
@@ -2848,5 +2890,90 @@ if("serviceWorker" in navigator){
   }
 })();
 </script>
+<script>
+/* The opening questions are out of the way.
+   Nine questions before anybody saw a suggestion. The research on this
+   category is blunt: a long onboarding quiz loses the reluctant partner
+   before the first real interaction. The answers still tailor which
+   suggestions appear, so the quiz is not deleted — it is offered instead.
+   A dismissible card on Today, and a permanent row in Settings. It never
+   opens by itself. */
+(function(){
+  var OFF = 'hw-quiz-dismissed';
+  function muzzle(){
+    if (typeof startQuiz !== 'function' || startQuiz.__onlyOnRequest) return;
+    var orig = startQuiz;
+    window.startQuiz = function(asked){ if (asked !== true) return; return orig.apply(this, arguments); };
+    window.startQuiz.__onlyOnRequest = true;
+    window.__openQuiz = function(){ return orig.call(window, true); };
+  }
+  muzzle(); setTimeout(muzzle, 400); setTimeout(muzzle, 1500);
+
+  function answered(){
+    try { return !!(typeof profile !== 'undefined' && profile && Object.keys(profile).length > 1); } catch(e){ return false; }
+  }
+  function dismissed(){ try { return localStorage.getItem(OFF) === '1'; } catch(e){ return false; } }
+
+  function onToday(){
+    var host = document.getElementById('screen-home');
+    if (!host) return;
+    var card = document.getElementById('quizOffer');
+    if (answered() || dismissed()) { if (card) card.remove(); return; }
+    if (card) return;
+    card = document.createElement('div');
+    card.id = 'quizOffer'; card.className = 'card quiz-offer';
+    card.innerHTML =
+      '<p class="quiz-offer-t">Make these fit your marriage</p>' +
+      '<p class="quiz-offer-s">A few questions, and the daily suggestions change to match. Nothing is required.</p>' +
+      '<div class="quiz-offer-row">' +
+        '<button class="btn" id="quizGo">Answer them</button>' +
+        '<button class="pw-link" id="quizNo">Not now</button>' +
+      '</div>';
+    host.insertBefore(card, host.firstChild);
+    document.getElementById('quizGo').onclick = function(){ if (window.__openQuiz) window.__openQuiz(); };
+    document.getElementById('quizNo').onclick = function(){
+      try { localStorage.setItem(OFF, '1'); } catch(e){}
+      card.remove();
+    };
+  }
+
+  function inSettings(){
+    var host = document.getElementById('screen-reminders');
+    if (!host || document.getElementById('quizRow')) return;
+    var done = answered();
+    var wrap = document.createElement('div');
+    wrap.id = 'quizRow'; wrap.className = 'quiz-row';
+    wrap.innerHTML =
+      '<p class="section-label">Suggestions</p>' +
+      '<p class="quiz-row-sub">' +
+        (done ? 'You have answered these. You can change them whenever.'
+              : 'A few questions about your marriage, so the daily suggestions fit it better.') +
+      '</p>' +
+      '<button class="btn quiet" id="quizRowBtn">' + (done ? 'Change your answers' : 'Answer a few questions') + '</button>';
+    var back = document.getElementById('backToApps');
+    if (back && back.parentNode === host) host.insertBefore(wrap, back); else host.appendChild(wrap);
+    document.getElementById('quizRowBtn').onclick = function(){
+      try { localStorage.removeItem(OFF); } catch(e){}
+      if (window.__openQuiz) window.__openQuiz();
+    };
+  }
+
+  function draw(){ onToday(); inSettings(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(draw, 900); });
+  else setTimeout(draw, 900);
+  document.addEventListener('click', function(){ setTimeout(draw, 160); }, true);
+})();
+</script>
+<style>
+.quiz-offer{border:1.5px dashed #D8D4E8}
+.quiz-offer-t{font-size:16px;font-weight:700;color:#1F1B56;margin:0 0 4px}
+.quiz-offer-s{font-size:13.5px;line-height:1.55;color:#6F6A94;margin:0 0 12px}
+.quiz-offer-row{display:flex;gap:10px;align-items:center}
+.quiz-offer-row .btn{flex:1;min-height:44px}
+.quiz-offer-row .pw-link{width:auto;flex:0 0 auto;padding:11px 10px}
+.quiz-row{margin-top:26px}
+.quiz-row-sub{color:#6F6A94;font-size:13.5px;line-height:1.55;margin:0 0 10px}
+#quizRowBtn{width:100%;min-height:46px}
+</style>
 </body>
 </html>
